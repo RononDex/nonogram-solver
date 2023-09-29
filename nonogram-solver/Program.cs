@@ -51,24 +51,38 @@ public class NonoGramSolver
                     List<long> validRows,
                     int startIndex)
     {
-        // Is this correct?
         // Determine where the last possible startIndex for this block Is
         // Corresponds to the last possible index where the remaining blocks (including 1 space in between) can still be placed
-        var maxStartIndex = numColumns - 1 - rowBlocks.Skip(block).Sum(b => b) - (rowBlocks.Count - block - 2);
+        var maxStartIndex =
+				numColumns
+				- rowBlocks.Skip(block + 1).Sum(b => b + 1) // +1 since we need at least one empty space in between each block
+				- startIndex
+                - rowBlocks[block]
+                + startIndex;
 
-        for (int start = startIndex; start < maxStartIndex; start++)
+        for (int start = startIndex; start <= maxStartIndex; start++)
         {
+            // set bits at correct locations
             for (int x = 0; x < rowBlocks[block]; x++)
             {
                 curRow ^= (1 << (start + x));
             }
 
-			if (block == rowBlocks.Count - 1) {
-					validRows.Add(curRow);
-			}
-			else {
-					FindValidRowCombinationsRecursive(rowBlocks, block + 1, curRow, validRows, start + rowBlocks[block] + 1);
-			}
+            if (block == rowBlocks.Count - 1)
+            {
+                validRows.Add(curRow);
+            }
+            else
+            {
+                FindValidRowCombinationsRecursive(rowBlocks, block + 1, curRow, validRows, start + rowBlocks[block] + 1);
+            }
+
+            // reset all bits from current block onwards to 0
+            long eraseBitMask = 0;
+            for (var x = 0; x <= startIndex; x++) {
+                eraseBitMask ^= (1 << x);
+            }
+            curRow &= eraseBitMask;
         }
     }
 

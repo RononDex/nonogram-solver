@@ -2,15 +2,11 @@ namespace nonogram_solver_tests;
 
 public class ParsingTests
 {
-    [SetUp]
-    public void Setup()
-    {
-    }
-
     [Test]
     public void Test_Duck_ParsesFileCorrectly()
     {
         File.Move("samples/duck.in", "nonogram.in", true);
+
 		NonoGramSolver.ParseInput();
 
 		Assert.AreEqual(NonoGramSolver.numColumns, 9);
