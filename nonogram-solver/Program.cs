@@ -2,18 +2,18 @@
 using System.Globalization;
 using System.Linq;
 
-class NonoGramSolver
+public class NonoGramSolver
 {
-    static readonly IEnumerator<string> inputLines = File.ReadLines("samples/nonogram.in").GetEnumerator();
+    static readonly IEnumerator<string> inputLines = File.ReadLines("nonogram.in").GetEnumerator();
     static string NextLine() { if (!inputLines.MoveNext()) throw new Exception(); return inputLines.Current; }
 
-    static byte numRows;
-    static byte numColumns;
-    static List<byte>[] rowBlocks;
-    static List<byte>[] columnBlocks;
-    static long[][] validRowCombinations;
+    public static byte numRows;
+    public static byte numColumns;
+    public static List<byte>[] rowBlocks;
+    public static List<byte>[] columnBlocks;
+    public static long[][] validRowCombinations;
 
-    static void Main()
+    public static void Main()
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
         using var outp = new StreamWriter("nonogram.out");
@@ -24,7 +24,7 @@ class NonoGramSolver
         FindValidRowCombinations();
     }
 
-    private static void FindValidRowCombinations()
+    public static void FindValidRowCombinations()
     {
         // Pre-Calculate all valid block positions in this row by storing the start positions of every block
         // This reduces redudancy in backtracking calulations and makes finish validation easier since
@@ -72,7 +72,7 @@ class NonoGramSolver
         }
     }
 
-    private static void ParseInput()
+    public static void ParseInput()
     {
         var firstLine = NextLine().Split(" ");
         numColumns = byte.Parse(firstLine[0]);
