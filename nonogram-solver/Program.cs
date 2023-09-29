@@ -22,13 +22,27 @@ public class NonoGramSolver
 
         // Pre-Processing
         FindValidRowCombinations();
+
+        FindSolution();
     }
 
+    private static void FindSolution()
+    {
+        var board = new long[numRows];
+		FindSolutionRecursive(0, 0, board.AsSpan());
+    }
+
+    private static void FindSolutionRecursive(int rowIndex, int combinationIndex, Span<long> currentBoard)
+    {
+    }
+
+    /// <summary>
+    /// Pre-Calculate all valid block positions in this row by storing the start positions of every block
+    /// This reduces redudancy in backtracking calulations and makes finish validation easier since
+    /// we no longer have to validate the rows
+    /// </summary>
     public static void FindValidRowCombinations()
     {
-        // Pre-Calculate all valid block positions in this row by storing the start positions of every block
-        // This reduces redudancy in backtracking calulations and makes finish validation easier since
-        // we no longer have to validate the rows
         for (int row = 0; row < numRows; row++)
         {
             if (rowBlocks[row].Count == 0)
@@ -54,15 +68,15 @@ public class NonoGramSolver
         // Determine where the last possible startIndex for this block Is
         // Corresponds to the last possible index where the remaining blocks (including 1 space in between) can still be placed
         var maxStartIndex =
-				numColumns
-				- rowBlocks.Skip(block + 1).Sum(b => b + 1) // +1 since we need at least one empty space in between each block
-				- startIndex
+                numColumns
+                - rowBlocks.Skip(block + 1).Sum(b => b + 1) // +1 since we need at least one empty space in between each block
+                - startIndex
                 - rowBlocks[block]
                 + startIndex;
 
         for (int start = startIndex; start <= maxStartIndex; start++)
         {
-            // set bits at correct locations
+            // set bits for current bar to 1
             for (int x = 0; x < rowBlocks[block]; x++)
             {
                 curRow ^= (1 << (start + x));
@@ -79,13 +93,17 @@ public class NonoGramSolver
 
             // reset all bits from current block onwards to 0
             long eraseBitMask = 0;
-            for (var x = 0; x <= startIndex; x++) {
+            for (var x = 0; x <= startIndex; x++)
+            {
                 eraseBitMask ^= (1 << x);
             }
             curRow &= eraseBitMask;
         }
     }
 
+    /// <summary>
+    /// Parses the input files and fills static instance variables (numColumns, numRows, rowBlocks, columnBlocks)
+    /// </summary>
     public static void ParseInput()
     {
         var firstLine = NextLine().Split(" ");

@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace nonogram_solver_tests;
 
 public class PreProcessingTests
@@ -7,10 +9,10 @@ public class PreProcessingTests
     {
         File.Move("samples/duck.in", "nonogram.in", true);
 
-		NonoGramSolver.ParseInput();
-		NonoGramSolver.FindValidRowCombinations();
+        NonoGramSolver.ParseInput();
+        NonoGramSolver.FindValidRowCombinations();
 
-		Assert.AreEqual(9, NonoGramSolver.validRowCombinations.Length);
+        Assert.AreEqual(9, NonoGramSolver.validRowCombinations.Length);
 
         /* Possible solutions for first row
                 ###------
@@ -22,7 +24,7 @@ public class PreProcessingTests
                 ------###
          index  012345678
         */
-		Assert.AreEqual(7, NonoGramSolver.validRowCombinations[0].Length);
+        Assert.AreEqual(7, NonoGramSolver.validRowCombinations[0].Length);
         Assert.AreEqual(0b000000111, NonoGramSolver.validRowCombinations[0][0]);
         Assert.AreEqual(0b000001110, NonoGramSolver.validRowCombinations[0][1]);
         Assert.AreEqual(0b000011100, NonoGramSolver.validRowCombinations[0][2]);
@@ -55,7 +57,7 @@ public class PreProcessingTests
                 -----##-#
          index  012345678
         */
-		Assert.AreEqual(21, NonoGramSolver.validRowCombinations[1].Length);
+        Assert.AreEqual(21, NonoGramSolver.validRowCombinations[1].Length);
         Assert.AreEqual(0b000001011, NonoGramSolver.validRowCombinations[1][0]);
         Assert.AreEqual(0b000010011, NonoGramSolver.validRowCombinations[1][1]);
         Assert.AreEqual(0b000100011, NonoGramSolver.validRowCombinations[1][2]);
