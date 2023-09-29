@@ -27,7 +27,7 @@ class NonoGramSolver
     private static void FindValidRowCombinations()
     {
         // Pre-Calculate all valid block positions in this row by storing the start positions of every block
-        // This reduces redudancy in backtracking calulations and makes finish validation easier since 
+        // This reduces redudancy in backtracking calulations and makes finish validation easier since
         // we no longer have to validate the rows
         for (int row = 0; row < numRows; row++)
         {
@@ -56,11 +56,11 @@ class NonoGramSolver
         // Corresponds to the last possible index where the remaining blocks (including 1 space in between) can still be placed
         var maxStartIndex = numColumns - 1 - rowBlocks.Skip(block).Sum(b => b) - (rowBlocks.Count - block - 2);
 
-        for (int start = startIndex; start < maxStartIndex; startIndex++)
+        for (int start = startIndex; start < maxStartIndex; start++)
         {
             for (int x = 0; x < rowBlocks[block]; x++)
             {
-                curRow ^= (1 << (startIndex + x));
+                curRow ^= (1 << (start + x));
             }
 
 			if (block == rowBlocks.Count - 1) {
