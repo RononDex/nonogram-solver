@@ -81,7 +81,6 @@ class NonoGramSolver
         columnBlocks = new List<byte>[numColumns];
         validRowCombinations = new long[numRows][];
 
-        NextLine(); //One empty line expected
         for (int row = 0; row < numRows; row++)
         {
             var rowLine = NextLine().Split(" ");
@@ -94,7 +93,6 @@ class NonoGramSolver
             }
         }
 
-        NextLine(); //One empty line expected
         for (int column = 0; column < numColumns; column++)
         {
             var columnLine = NextLine().Split(" ");
