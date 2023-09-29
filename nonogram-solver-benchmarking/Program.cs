@@ -1,5 +1,9 @@
+using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Validators;
+using nonogram_solver_tests;
 
 namespace nonogram_solver_benchmarking
 {
@@ -7,11 +11,12 @@ namespace nonogram_solver_benchmarking
     {
         public static void Main(string[] args)
         {
-            var config = DefaultConfig.Instance;
-            var summary = BenchmarkRunner.Run<Benchmarks>(config, args);
-
-            // Use this to select benchmarks from the console:
-            // var summaries = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
+            var config = new ManualConfig()
+                .WithOptions(ConfigOptions.DisableOptimizationsValidator)
+                .AddValidator(JitOptimizationsValidator.DontFailOnError)
+                .AddLogger(ConsoleLogger.Default)
+                .AddColumnProvider(DefaultColumnProviders.Instance);
+            _ = BenchmarkSwitcher.FromAssembly(typeof(PreProcessingTests).Assembly).Run(args, config);
         }
     }
 }

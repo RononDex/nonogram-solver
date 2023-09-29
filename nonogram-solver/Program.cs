@@ -4,17 +4,20 @@ using System.Linq;
 
 public class NonoGramSolver
 {
-    static readonly IEnumerator<string> inputLines = File.ReadLines("nonogram.in").GetEnumerator();
+    static IEnumerator<string> inputLines;
     static string NextLine() { if (!inputLines.MoveNext()) throw new Exception(); return inputLines.Current; }
 
     public static byte numRows;
     public static byte numColumns;
-    public static List<byte>[] rowBlocks;
-    public static List<byte>[] columnBlocks;
-    public static long[][] validRowCombinations;
+    public static List<byte>[]? rowBlocks;
+    public static List<byte>[]? columnBlocks;
+    public static long[][]? validRowCombinations;
+    public static long[]? solution;
 
     public static void Main()
     {
+        solution = null;
+        inputLines = File.ReadLines("nonogram.in").GetEnumerator();
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
         using var outp = new StreamWriter("nonogram.out");
 
@@ -24,16 +27,58 @@ public class NonoGramSolver
         FindValidRowCombinations();
 
         FindSolution();
+        if (solution == null)
+        {
+            Console.WriteLine("No solution found");
+            return;
+        }
     }
 
     private static void FindSolution()
     {
         var board = new long[numRows];
-		FindSolutionRecursive(0, 0, board.AsSpan());
+        FindSolutionRecursive(0, board.AsSpan());
     }
 
-    private static void FindSolutionRecursive(int rowIndex, int combinationIndex, Span<long> currentBoard)
+    private static void FindSolutionRecursive(int rowIndex, Span<long> currentBoard)
     {
+        for (var combinationIndex = 0; combinationIndex < validRowCombinations![rowIndex].Length; combinationIndex++)
+        {
+            if (solution != null)
+                return;
+
+            if (rowIndex < numColumns - 1)
+            {
+                currentBoard[rowIndex] = validRowCombinations[rowIndex][combinationIndex];
+
+                if (!IsValidSolution(currentBoard, rowIndex))
+                {
+                    continue;
+                }
+
+                FindSolutionRecursive(rowIndex + 1, currentBoard);
+            }
+            else
+            {
+            }
+        }
+    }
+
+    private static bool IsValidSolution(Span<long> currentBoard, int maxRow)
+    {
+            // Idea: find current column blocks and check if in violation with input
+        var colSums = new ushort[numColumns];
+
+        for (var row = 0; row < maxRow; row++)
+        {
+            for (var col = 0; col < numColumns; col++)
+            {
+                if ((currentBoard[row] & (1 << col)) > 0)
+                {
+                    colSums[col]++;
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -45,15 +90,15 @@ public class NonoGramSolver
     {
         for (int row = 0; row < numRows; row++)
         {
-            if (rowBlocks[row].Count == 0)
+            if (rowBlocks![row].Count == 0)
             {
-                validRowCombinations[row] = new long[] { 0L };
+                validRowCombinations![row] = new long[] { 0L };
             }
             else
             {
                 List<long> validRows = new List<long>();
                 FindValidRowCombinationsRecursive(rowBlocks[row], 0, 0, validRows, 0);
-                validRowCombinations[row] = validRows.ToArray();
+                validRowCombinations![row] = validRows.ToArray();
             }
         }
     }

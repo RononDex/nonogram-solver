@@ -14,15 +14,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Content Include="*.in">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.13.8" />
 		<PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.8" Condition="'$(OS)' == 'Windows_NT'" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\nonogram-solver\nonogram-solver.csproj" />
+		<ProjectReference Include="..\nonogram-solver-tests\nonogram-solver-tests.csproj" />
 	</ItemGroup>
 </Project>
