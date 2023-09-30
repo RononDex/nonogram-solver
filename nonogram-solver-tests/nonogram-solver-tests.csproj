@@ -23,6 +23,11 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
+		<Content Include="samples\*.out">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
 		<ProjectReference Include="..\nonogram-solver\nonogram-solver.csproj" />
 	</ItemGroup>
 

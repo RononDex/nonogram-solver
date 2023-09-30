@@ -4,226 +4,321 @@ using System.Linq;
 
 public class NonoGramSolver
 {
-	static IEnumerator<string> inputLines = File.ReadLines("nonogram.in").GetEnumerator();
-	static string NextLine() { if (!inputLines.MoveNext()) throw new Exception(); return inputLines.Current; }
+		static IEnumerator<string> inputLines = File.ReadLines("nonogram.in").GetEnumerator();
+		static string NextLine() { if (!inputLines.MoveNext()) throw new Exception(); return inputLines.Current; }
 
-	public static byte numRows;
-	public static byte numColumns;
-	public static List<byte>[]? rowBlocks;
-	public static List<byte>[]? columnBlocks;
-	public static long[][]? validRowCombinations;
-	public static long[][]? validColumnCombinations;
-	public static List<long[]> solutions;
+		public static byte numRows;
+		public static byte numColumns;
+		public static List<byte>[]? rowBlocks;
+		public static List<byte>[]? columnBlocks;
+		public static List<long>[] validRowCombinations;
+		public static List<long>[] validColumnCombinations;
+		public static List<long[]> solutions;
 
-	public static void Main()
-	{
-		inputLines = File.ReadLines("nonogram.in").GetEnumerator();
-		Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-		solutions = new();
-		using var outp = new StreamWriter("nonogram.out");
-
-		// Parsing
-		ParseInput();
-
-		// Pre-Processing
-		FindValidDimensionCombinations(numRows, ref validRowCombinations!, rowBlocks!, numColumns);
-		FindValidDimensionCombinations(numColumns, ref validColumnCombinations!, columnBlocks!, numRows);
-
-		// Solving
-		FindSolutions();
-		if (solutions.Count == 0)
+		public static void Main()
 		{
-			Console.WriteLine("No solution found");
-			return;
-		}
-	}
+				inputLines = File.ReadLines("nonogram.in").GetEnumerator();
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+				solutions = new();
 
-	private static void FindSolutions()
-	{
-		var emptyBoardRows = new long[numRows];
-		var emptyBoardColumns = new long[numColumns];
-		FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan());
-	}
+				// Parsing
+				ParseInput();
 
-	private static void FindSolutionRecursive(int rowIndex, Span<long> boardRows, Span<long> boardColumns)
-	{
-		var isLastRow = rowIndex == numRows - 1;
-		for (var combinationIndex = 0; combinationIndex < validRowCombinations![rowIndex].Length; combinationIndex++)
-		{
-			// Pick a valid row combination to try
-			boardRows[rowIndex] = validRowCombinations[rowIndex][combinationIndex];
-			UpdateColumnBoard(boardColumns, ref boardRows[rowIndex], ref rowIndex);
-
-			var hasValidColumns = IsValidPartialSolution(boardColumns, ref rowIndex);
-
-			if (hasValidColumns && isLastRow)
-			{
-				solutions.Add(boardRows.ToArray());
-			}
-			else if (hasValidColumns && !isLastRow)
-			{
-				FindSolutionRecursive(rowIndex + 1, boardRows, boardColumns);
-			}
-		}
-	}
-	/// <summary>
-	/// Validate if the current calculated columns are still valid according to
-	/// the precalculated valid column combinations
-	/// </summary>
-	private static bool IsValidPartialSolution(Span<long> boardColumns, ref int rowIndex)
-	{
-		long relevantRowsBitMask = 0;
-		for (var row = 0; row <= rowIndex; row++)
-		{
-			relevantRowsBitMask |= (long)1 << row;
-		}
-		for (var columnIndex = 0; columnIndex < numColumns; columnIndex++)
-		{
-			bool foundMatch = false;
-			for (var validColumnIndex = 0;
-				validColumnIndex < validColumnCombinations[columnIndex].Length && !foundMatch;
-				validColumnIndex++)
-			{
-				if ((boardColumns[columnIndex] & relevantRowsBitMask)
-								== (validColumnCombinations[columnIndex][validColumnIndex] & relevantRowsBitMask))
+				// Pre-Processing
+				FindValidDimensionCombinations(numRows, validRowCombinations!, rowBlocks!, numColumns);
+				FindValidDimensionCombinations(numColumns, validColumnCombinations!, columnBlocks!, numRows);
+				for (var i = 0; i < 5; i++)
 				{
-					foundMatch = true;
+						FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
+						FilterImpossibleCombinations(numColumns, validColumnCombinations, numRows, validRowCombinations);
 				}
-			}
 
-			if (!foundMatch)
-			{
-				return false;
-			}
+				// Solving
+				FindSolutions();
+				if (solutions.Count == 0)
+				{
+						Console.WriteLine("No solution found");
+						return;
+				}
+
+				// Output
+				OutputSolutions();
 		}
 
-		return true;
-	}
-
-	private static void UpdateColumnBoard(Span<long> boardColumns, ref long newlyChosenRow, ref int rowIndex)
-	{
-		for (var column = 0; column < numColumns; column++)
+		private static void OutputSolutions()
 		{
-			// set bit to 1 on column if row has bit set
-			if ((newlyChosenRow & ((long)1 << column)) > 0)
-			{
-				boardColumns[column] |= ((long)1 << rowIndex);
-			}
-			else
-			{
-				// reset value to 0
-				boardColumns[column] &= ~((long)1 << rowIndex);
-			}
-		}
-	}
+				long[] bitMasks = new long[numColumns];
+				for (var i = 0; i < numColumns; i++)
+				{
+						bitMasks[i] = 0;
+						bitMasks[i] |= (1L << i);
+				}
+				using (var outp = new StreamWriter("nonogram.out"))
+				{
+						for (var solution = 0; solution < solutions.Count; solution++)
+						{
+								for (var row = 0; row < solutions[solution].Length; row++)
+								{
+										var chars = new char[numColumns];
+										for (var x = 0; x < numColumns; x++)
+										{
+												chars[x] = (solutions[solution][row] & bitMasks[x]) > 0 ? '#' : '.';
+										}
 
-	/// <summary>
-	/// Pre-Calculate all valid block positions in this dimension by storing the start positions of every block
-	/// This reduces redudancy in backtracking calulations and makes finish validation easier since
-	/// we no longer have to validate this dimension
-	/// </summary>
-	public static void FindValidDimensionCombinations(int numElements, ref long[][] validArrays, List<byte>[] blocks, int otherDimensionLength)
-	{
-		for (var index = 0; index < numElements; index++)
+										outp.Write(chars);
+								}
+								outp.Write("\r\n");
+						}
+				}
+		}
+
+		private static void FilterImpossibleCombinations(byte numXAxis, List<long>[] validXCombinations, byte numYAxis, List<long>[] validYCombinations)
 		{
-			if (blocks[index].Count == 0)
-			{
-				validArrays[index] = new long[] { 0L };
-			}
-			else
-			{
-				List<long> validList = new List<long>();
-				FindValidDimensionCombinationsRecursive(blocks[index], 0, 0, validList, 0, otherDimensionLength);
-				validArrays[index] = validList.ToArray();
-			}
+				for (var x = 0; x < numXAxis; x++)
+				{
+						var yBitMask = (1L << x);
+						var validXAxisEntries = validXCombinations[x];
+
+
+						for (var y = 0; y < numYAxis; y++)
+						{
+								var validYAxisEntries = validYCombinations[y];
+								var xBitMask = (1L << y);
+								var filledFieldsInXAxis = false;
+								var emptyFieldsInXAxis = false;
+
+								for (var validX = 0; validX < validXAxisEntries.Count; validX++)
+								{
+										if ((validXAxisEntries[validX] & xBitMask) > 0)
+										{
+												filledFieldsInXAxis = true;
+										}
+										else
+										{
+												emptyFieldsInXAxis = true;
+										}
+
+										if (emptyFieldsInXAxis && filledFieldsInXAxis) break;
+								}
+
+								// If there are no combinations in the X axis that are filled at the given x/y coordinates
+								// we can remove all y combinations that are empty at this location
+								if (!filledFieldsInXAxis)
+								{
+										for (var validY = 0; validY < validYAxisEntries.Count; validY++)
+										{
+
+												if ((validYAxisEntries[validY] & yBitMask) > 0)
+												{
+														validYAxisEntries.RemoveAt(validY);
+														validY--;
+												}
+										}
+								}
+								// Same for empty fields
+								if (!emptyFieldsInXAxis)
+								{
+										for (var validY = 0; validY < validYAxisEntries.Count; validY++)
+										{
+
+												if ((validYAxisEntries[validY] & yBitMask) == 0)
+												{
+														validYAxisEntries.RemoveAt(validY);
+														validY--;
+												}
+										}
+								}
+
+						}
+				}
 		}
-	}
 
-	private static void FindValidDimensionCombinationsRecursive(
-					List<byte> blocks,
-					int blockIndex,
-					long curElement,
-					List<long> validList,
-					int startIndex,
-					int otherDimensionLength)
-	{
-		var blockLength = blocks[blockIndex];
-		// Determine where the last possible startIndex for this block Is
-		// Corresponds to the last possible index where the remaining blocks (including 1 space in between) can still be placed
-		var maxStartIndex =
-				otherDimensionLength
-				- blocks.Skip(blockIndex + 1).Sum(b => b + 1) // +1 since we need at least one empty space in between each block
-				- startIndex
-				- blockLength
-				+ startIndex;
-
-		for (int start = startIndex; start <= maxStartIndex; start++)
+		private static void FindSolutions()
 		{
-			// set bits for current bar to 1
-			for (int x = 0; x < blocks[blockIndex]; x++)
-			{
-				curElement |= (long)1 << (start + x);
-			}
-
-			if (blockIndex == blocks.Count - 1)
-			{
-				validList.Add(curElement);
-			}
-			else
-			{
-				FindValidDimensionCombinationsRecursive(
-								blocks,
-								blockIndex + 1,
-								curElement,
-								validList,
-								start + blocks[blockIndex] + 1, otherDimensionLength);
-			}
-
-			// reset all bits from current block onwards to 0
-			long eraseBitMask = 0;
-			for (var x = 0; x <= blockLength; x++)
-			{
-				eraseBitMask |= (long)1 << (x + start);
-			}
-			curElement &= ~eraseBitMask;
+				var emptyBoardRows = new long[numRows];
+				var emptyBoardColumns = new long[numColumns];
+				FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan());
 		}
-	}
 
-	/// <summary>
-	/// Parses the input files and fills static instance variables (numColumns, numRows, rowBlocks, columnBlocks)
-	/// </summary>
-	public static void ParseInput()
-	{
-		var firstLine = NextLine().Split(" ");
-		numColumns = byte.Parse(firstLine[0]);
-		numRows = byte.Parse(firstLine[1]);
-		rowBlocks = new List<byte>[numRows];
-		columnBlocks = new List<byte>[numColumns];
-		validRowCombinations = new long[numRows][];
-		validColumnCombinations = new long[numColumns][];
-
-		for (int row = 0; row < numRows; row++)
+		private static void FindSolutionRecursive(int rowIndex, Span<long> boardRows, Span<long> boardColumns)
 		{
-			var rowLine = NextLine().Split(" ");
-			rowBlocks[row] = new List<byte>();
+				var isLastRow = rowIndex == numRows - 1;
+				for (var combinationIndex = 0; combinationIndex < validRowCombinations![rowIndex].Count; combinationIndex++)
+				{
+						// Pick a valid row combination to try
+						boardRows[rowIndex] = validRowCombinations[rowIndex][combinationIndex];
+						UpdateColumnBoard(boardColumns, ref boardRows[rowIndex], ref rowIndex);
 
-			for (var block = 0; block < rowLine.Length; block++)
-			{
-				if (rowLine[block].Length > 0)
-					rowBlocks[row].Add(byte.Parse(rowLine[block]));
-			}
+						var hasValidColumns = IsValidPartialSolution(boardColumns, ref rowIndex);
+
+						if (hasValidColumns && isLastRow)
+						{
+								solutions.Add(boardRows.ToArray());
+						}
+						else if (hasValidColumns && !isLastRow)
+						{
+								FindSolutionRecursive(rowIndex + 1, boardRows, boardColumns);
+						}
+				}
 		}
-
-		for (int column = 0; column < numColumns; column++)
+		/// <summary>
+		/// Validate if the current calculated columns are still valid according to
+		/// the precalculated valid column combinations
+		/// </summary>
+		private static bool IsValidPartialSolution(Span<long> boardColumns, ref int rowIndex)
 		{
-			var columnLine = NextLine().Split(" ");
-			columnBlocks[column] = new List<byte>();
+				long relevantRowsBitMask = 0;
+				for (var row = 0; row <= rowIndex; row++)
+				{
+						relevantRowsBitMask |= (long)1 << row;
+				}
+				for (var columnIndex = 0; columnIndex < numColumns; columnIndex++)
+				{
+						bool foundMatch = false;
+						for (var validColumnIndex = 0;
+							validColumnIndex < validColumnCombinations[columnIndex].Count && !foundMatch;
+							validColumnIndex++)
+						{
+								if ((boardColumns[columnIndex] & relevantRowsBitMask)
+												== (validColumnCombinations[columnIndex][validColumnIndex] & relevantRowsBitMask))
+								{
+										foundMatch = true;
+								}
+						}
 
-			for (var block = 0; block < columnLine.Length; block++)
-			{
-				if (columnLine[block].Length > 0)
-					columnBlocks[column].Add(byte.Parse(columnLine[block]));
-			}
+						if (!foundMatch)
+						{
+								return false;
+						}
+				}
+
+				return true;
 		}
-	}
+
+		private static void UpdateColumnBoard(Span<long> boardColumns, ref long newlyChosenRow, ref int rowIndex)
+		{
+				for (var column = 0; column < numColumns; column++)
+				{
+						// set bit to 1 on column if row has bit set
+						if ((newlyChosenRow & ((long)1 << column)) > 0)
+						{
+								boardColumns[column] |= ((long)1 << rowIndex);
+						}
+						else
+						{
+								// reset value to 0
+								boardColumns[column] &= ~((long)1 << rowIndex);
+						}
+				}
+		}
+
+		/// <summary>
+		/// Pre-Calculate all valid block positions in this dimension by storing the start positions of every block
+		/// This reduces redudancy in backtracking calulations and makes finish validation easier since
+		/// we no longer have to validate this dimension
+		/// </summary>
+		public static void FindValidDimensionCombinations(int numElements, List<long>[] validArrays, List<byte>[] blocks, int otherDimensionLength)
+		{
+				for (var index = 0; index < numElements; index++)
+				{
+						if (blocks[index].Count == 0)
+						{
+								validArrays[index] = new(new[] { 0L });
+						}
+						else
+						{
+								List<long> validList = new List<long>();
+								FindValidDimensionCombinationsRecursive(blocks[index], 0, 0, validList, 0, otherDimensionLength);
+								validArrays[index] = validList;
+						}
+				}
+		}
+
+		private static void FindValidDimensionCombinationsRecursive(
+						List<byte> blocks,
+						int blockIndex,
+						long curElement,
+						List<long> validList,
+						int startIndex,
+						int otherDimensionLength)
+		{
+				var blockLength = blocks[blockIndex];
+				// Determine where the last possible startIndex for this block Is
+				// Corresponds to the last possible index where the remaining blocks (including 1 space in between) can still be placed
+				var maxStartIndex =
+						otherDimensionLength
+						- blocks.Skip(blockIndex + 1).Sum(b => b + 1) // +1 since we need at least one empty space in between each block
+						- startIndex
+						- blockLength
+						+ startIndex;
+
+				for (int start = startIndex; start <= maxStartIndex; start++)
+				{
+						// set bits for current bar to 1
+						for (int x = 0; x < blocks[blockIndex]; x++)
+						{
+								curElement |= (long)1 << (start + x);
+						}
+
+						if (blockIndex == blocks.Count - 1)
+						{
+								validList.Add(curElement);
+						}
+						else
+						{
+								FindValidDimensionCombinationsRecursive(
+												blocks,
+												blockIndex + 1,
+												curElement,
+												validList,
+												start + blocks[blockIndex] + 1, otherDimensionLength);
+						}
+
+						// reset all bits from current block onwards to 0
+						long eraseBitMask = 0;
+						for (var x = 0; x <= blockLength; x++)
+						{
+								eraseBitMask |= (long)1 << (x + start);
+						}
+						curElement &= ~eraseBitMask;
+				}
+		}
+
+		/// <summary>
+		/// Parses the input files and fills static instance variables (numColumns, numRows, rowBlocks, columnBlocks)
+		/// </summary>
+		public static void ParseInput()
+		{
+				var firstLine = NextLine().Split(" ");
+				numColumns = byte.Parse(firstLine[0]);
+				numRows = byte.Parse(firstLine[1]);
+				rowBlocks = new List<byte>[numRows];
+				columnBlocks = new List<byte>[numColumns];
+				validRowCombinations = new List<long>[numRows];
+				validColumnCombinations = new List<long>[numColumns];
+
+				for (int row = 0; row < numRows; row++)
+				{
+						var rowLine = NextLine().Split(" ");
+						rowBlocks[row] = new List<byte>();
+
+						for (var block = 0; block < rowLine.Length; block++)
+						{
+								if (rowLine[block].Length > 0)
+										rowBlocks[row].Add(byte.Parse(rowLine[block]));
+						}
+				}
+
+				for (int column = 0; column < numColumns; column++)
+				{
+						var columnLine = NextLine().Split(" ");
+						columnBlocks[column] = new List<byte>();
+
+						for (var block = 0; block < columnLine.Length; block++)
+						{
+								if (columnLine[block].Length > 0)
+										columnBlocks[column].Add(byte.Parse(columnLine[block]));
+						}
+				}
+		}
 }
