@@ -9,9 +9,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/nonogram-solver-tests/bin/Debug/net7.0/nonogram-solver-tests.dll",
+            "program": "${workspaceFolder}/nonogram-solver/bin/Debug/net7.0/nonogram-solver.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/nonogram-solver-tests",
+            "cwd": "${workspaceFolder}/nonogram-solver",
             "console": "internalConsole",
             "stopAtEntry": false
         },
