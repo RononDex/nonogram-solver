@@ -1,19 +1,19 @@
 ﻿//code by tino.heuberger@students.fhnw.ch
 using System.Globalization;
-using System.Linq;
+using System.Numerics;
 
 public class NonoGramSolver
 {
 		static IEnumerator<string> inputLines = File.ReadLines("nonogram.in").GetEnumerator();
 		static string NextLine() { if (!inputLines.MoveNext()) throw new Exception(); return inputLines.Current; }
 
-		public static byte numRows;
-		public static byte numColumns;
-		public static Dictionary<int, HashSet<byte>>? rowBlocks;
-		public static Dictionary<int, HashSet<byte>>? columnBlocks;
-		public static Dictionary<int, HashSet<long>>? validRowCombinations;
-		public static Dictionary<int, HashSet<long>>? validColumnCombinations;
-		public static Dictionary<int, List<long>>? solutions;
+		public static ushort numRows;
+		public static ushort numColumns;
+		public static Dictionary<int, HashSet<ushort>>? rowBlocks;
+		public static Dictionary<int, HashSet<ushort>>? columnBlocks;
+		public static Dictionary<int, HashSet<BigInteger>>? validRowCombinations;
+		public static Dictionary<int, HashSet<BigInteger>>? validColumnCombinations;
+		public static Dictionary<int, List<BigInteger>>? solutions;
 
 		public static void Main()
 		{
@@ -54,9 +54,9 @@ public class NonoGramSolver
 				}
 				using (var outp = new StreamWriter("nonogram.out"))
 				{
-						for (var solution = 0; solution < solutions.Count; solution++)
+						for (ushort solution = 0; solution < solutions.Count; solution++)
 						{
-								for (var row = 0; row < solutions[solution].Count; row++)
+								for (ushort row = 0; row < solutions[solution].Count; row++)
 								{
 										var chars = new char[numColumns];
 										for (var x = 0; x < numColumns; x++)
@@ -71,15 +71,15 @@ public class NonoGramSolver
 				}
 		}
 
-		private static void FilterImpossibleCombinations(byte numXAxis, Dictionary<int, HashSet<long>> validXCombinations, byte numYAxis, Dictionary<int, HashSet<long>> validYCombinations)
+		private static void FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<BigInteger>> validXCombinations, int numYAxis, Dictionary<int, HashSet<BigInteger>> validYCombinations)
 		{
-				for (var x = 0; x < numXAxis; x++)
+				for (ushort x = 0; x < numXAxis; x++)
 				{
 						var yBitMask = (1L << x);
 						var validXAxisEntries = validXCombinations[x];
 
 
-						for (var y = 0; y < numYAxis; y++)
+						for (ushort y = 0; y < numYAxis; y++)
 						{
 								var validYAxisEntries = validYCombinations[y];
 								var xBitMask = (1L << y);
@@ -118,12 +118,12 @@ public class NonoGramSolver
 
 		private static void FindSolutions()
 		{
-				var emptyBoardRows = new long[numRows];
-				var emptyBoardColumns = new long[numColumns];
+				var emptyBoardRows = new BigInteger[numRows];
+				var emptyBoardColumns = new BigInteger[numColumns];
 				FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan());
 		}
 
-		private static void FindSolutionRecursive(int rowIndex, Span<long> boardRows, Span<long> boardColumns)
+		private static void FindSolutionRecursive(int rowIndex, Span<BigInteger> boardRows, Span<BigInteger> boardColumns)
 		{
 				var isLastRow = rowIndex == numRows - 1;
 				foreach (var combination in validRowCombinations![rowIndex])
@@ -136,7 +136,7 @@ public class NonoGramSolver
 
 						if (hasValidColumns && isLastRow)
 						{
-								solutions.Add(solutions.Count, new List<long>(boardRows.ToArray()));
+								solutions.Add((ushort)solutions.Count, new List<BigInteger>(boardRows.ToArray()));
 						}
 						else if (hasValidColumns && !isLastRow)
 						{
@@ -148,14 +148,14 @@ public class NonoGramSolver
 		/// Validate if the current calculated columns are still valid according to
 		/// the precalculated valid column combinations
 		/// </summary>
-		private static bool IsValidPartialSolution(Span<long> boardColumns, ref int rowIndex)
+		private static bool IsValidPartialSolution(Span<BigInteger> boardColumns, ref int rowIndex)
 		{
-				long relevantRowsBitMask = 0;
+				BigInteger relevantRowsBitMask = 0;
 				for (var row = 0; row <= rowIndex; row++)
 				{
-						relevantRowsBitMask |= (long)1 << row;
+						relevantRowsBitMask |= BigInteger.One << row;
 				}
-				for (var columnIndex = 0; columnIndex < numColumns; columnIndex++)
+				for (ushort columnIndex = 0; columnIndex < numColumns; columnIndex++)
 				{
 						bool foundMatch = false;
 						foreach (var validColumn in validColumnCombinations[columnIndex])
@@ -176,19 +176,19 @@ public class NonoGramSolver
 				return true;
 		}
 
-		private static void UpdateColumnBoard(Span<long> boardColumns, ref long newlyChosenRow, ref int rowIndex)
+		private static void UpdateColumnBoard(Span<BigInteger> boardColumns, ref BigInteger newlyChosenRow, ref int rowIndex)
 		{
-				for (var column = 0; column < numColumns; column++)
+				for (ushort column = 0; column < numColumns; column++)
 				{
 						// set bit to 1 on column if row has bit set
-						if ((newlyChosenRow & ((long)1 << column)) > 0)
+						if ((newlyChosenRow & (BigInteger.One << column)) > 0)
 						{
-								boardColumns[column] |= ((long)1 << rowIndex);
+								boardColumns[column] |= (BigInteger.One << rowIndex);
 						}
 						else
 						{
 								// reset value to 0
-								boardColumns[column] &= ~((long)1 << rowIndex);
+								boardColumns[column] &= ~(BigInteger.One << rowIndex);
 						}
 				}
 		}
@@ -198,17 +198,17 @@ public class NonoGramSolver
 		/// This reduces redudancy in backtracking calulations and makes finish validation easier since
 		/// we no longer have to validate this dimension
 		/// </summary>
-		public static void FindValidDimensionCombinations(int numElements, Dictionary<int, HashSet<long>> validArrays, Dictionary<int, HashSet<byte>> blocks, int otherDimensionLength)
+		public static void FindValidDimensionCombinations(int numElements, Dictionary<int, HashSet<BigInteger>> validArrays, Dictionary<int, HashSet<ushort>> blocks, int otherDimensionLength)
 		{
-				for (var index = 0; index < numElements; index++)
+				for (ushort index = 0; index < numElements; index++)
 				{
 						if (blocks[index].Count == 0)
 						{
-								validArrays[index] = new(new[] { 0L });
+								validArrays[index] = new(new[] { BigInteger.Zero });
 						}
 						else
 						{
-								HashSet<long> validList = new HashSet<long>();
+								HashSet<BigInteger> validList = new HashSet<BigInteger>();
 								FindValidDimensionCombinationsRecursive(blocks[index], 0, 0, validList, 0, otherDimensionLength);
 								validArrays.Add(index, validList);
 						}
@@ -216,10 +216,10 @@ public class NonoGramSolver
 		}
 
 		private static void FindValidDimensionCombinationsRecursive(
-						HashSet<byte> blocks,
+						HashSet<ushort> blocks,
 						int blockIndex,
-						long curElement,
-						HashSet<long> validList,
+						BigInteger curElement,
+						HashSet<BigInteger> validList,
 						int startIndex,
 						int otherDimensionLength)
 		{
@@ -233,12 +233,12 @@ public class NonoGramSolver
 						- blockLength
 						+ startIndex;
 
-				for (int start = startIndex; start <= maxStartIndex; start++)
+				for (var start = startIndex; start <= maxStartIndex; start++)
 				{
 						// set bits for current bar to 1
 						for (int x = 0; x < blockLength; x++)
 						{
-								curElement |= (long)1 << (start + x);
+								curElement |= BigInteger.One << (start + x);
 						}
 
 						if (blockIndex == blocks.Count - 1)
@@ -252,14 +252,15 @@ public class NonoGramSolver
 												blockIndex + 1,
 												curElement,
 												validList,
-												start + blockLength + 1, otherDimensionLength);
+												start + blockLength + (ushort)1,
+												otherDimensionLength);
 						}
 
 						// reset all bits from current block onwards to 0
-						long eraseBitMask = 0;
+						BigInteger eraseBitMask = 0;
 						for (var x = 0; x <= blockLength; x++)
 						{
-								eraseBitMask |= (long)1 << (x + start);
+								eraseBitMask |= BigInteger.One << (x + start);
 						}
 						curElement &= ~eraseBitMask;
 				}
@@ -273,15 +274,15 @@ public class NonoGramSolver
 				var firstLine = NextLine().Split(" ");
 				numColumns = byte.Parse(firstLine[0]);
 				numRows = byte.Parse(firstLine[1]);
-				rowBlocks = new Dictionary<int, HashSet<byte>>(numRows);
-				columnBlocks = new Dictionary<int, HashSet<byte>>(numColumns);
-				validRowCombinations = new Dictionary<int, HashSet<long>>(numRows);
-				validColumnCombinations = new Dictionary<int, HashSet<long>>(numColumns);
+				rowBlocks = new Dictionary<int, HashSet<ushort>>(numRows);
+				columnBlocks = new Dictionary<int, HashSet<ushort>>(numColumns);
+				validRowCombinations = new Dictionary<int, HashSet<BigInteger>>(numRows);
+				validColumnCombinations = new Dictionary<int, HashSet<BigInteger>>(numColumns);
 
 				for (int row = 0; row < numRows; row++)
 				{
 						var rowLine = NextLine().Split(" ");
-						rowBlocks[row] = new HashSet<byte>(rowLine.Length);
+						rowBlocks[row] = new HashSet<ushort>(rowLine.Length);
 
 						for (var block = 0; block < rowLine.Length; block++)
 						{
@@ -293,7 +294,7 @@ public class NonoGramSolver
 				for (int column = 0; column < numColumns; column++)
 				{
 						var columnLine = NextLine().Split(" ");
-						columnBlocks[column] = new HashSet<byte>(columnLine.Length);
+						columnBlocks[column] = new HashSet<ushort>(columnLine.Length);
 
 						for (var block = 0; block < columnLine.Length; block++)
 						{
