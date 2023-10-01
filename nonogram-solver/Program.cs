@@ -37,7 +37,6 @@ public class NonoGramSolver
 				FindSolutions();
 				if (solutions.Count == 0)
 				{
-						Console.WriteLine("No solution found");
 						return;
 				}
 
@@ -87,9 +86,9 @@ public class NonoGramSolver
 								var filledFieldsInXAxis = false;
 								var emptyFieldsInXAxis = false;
 
-								for (var validX = 0; validX < validXAxisEntries.Count; validX++)
+								foreach (var validXComb in validXAxisEntries)
 								{
-										if ((validXAxisEntries.ElementAt(validX) & xBitMask) > 0)
+										if ((validXComb & xBitMask) > 0)
 										{
 												filledFieldsInXAxis = true;
 										}
@@ -105,28 +104,12 @@ public class NonoGramSolver
 								// we can remove all y combinations that are empty at this location
 								if (!filledFieldsInXAxis)
 								{
-										for (var validY = 0; validY < validYAxisEntries.Count; validY++)
-										{
-												var yEntry = validYAxisEntries.ElementAt(validY);
-												if ((yEntry & yBitMask) > 0)
-												{
-														validYAxisEntries.Remove(yEntry);
-														validY--;
-												}
-										}
+										validXAxisEntries.RemoveWhere(e => (e & yBitMask) > 0);
 								}
 								// Same for empty fields
 								if (!emptyFieldsInXAxis)
 								{
-										for (var validY = 0; validY < validYAxisEntries.Count; validY++)
-										{
-												var yEntry = validYAxisEntries.ElementAt(validY);
-												if ((yEntry & yBitMask) == 0)
-												{
-														validYAxisEntries.Remove(yEntry);
-														validY--;
-												}
-										}
+										validXAxisEntries.RemoveWhere(e => (e & yBitMask) == 0);
 								}
 
 						}
@@ -143,10 +126,10 @@ public class NonoGramSolver
 		private static void FindSolutionRecursive(int rowIndex, Span<long> boardRows, Span<long> boardColumns)
 		{
 				var isLastRow = rowIndex == numRows - 1;
-				for (var combinationIndex = 0; combinationIndex < validRowCombinations![rowIndex].Count; combinationIndex++)
+				foreach (var combination in validRowCombinations![rowIndex])
 				{
 						// Pick a valid row combination to try
-						boardRows[rowIndex] = validRowCombinations[rowIndex].ElementAt(combinationIndex);
+						boardRows[rowIndex] = combination;
 						UpdateColumnBoard(boardColumns, ref boardRows[rowIndex], ref rowIndex);
 
 						var hasValidColumns = IsValidPartialSolution(boardColumns, ref rowIndex);
@@ -175,12 +158,10 @@ public class NonoGramSolver
 				for (var columnIndex = 0; columnIndex < numColumns; columnIndex++)
 				{
 						bool foundMatch = false;
-						for (var validColumnIndex = 0;
-							validColumnIndex < validColumnCombinations[columnIndex].Count && !foundMatch;
-							validColumnIndex++)
+						foreach (var validColumn in validColumnCombinations[columnIndex])
 						{
 								if ((boardColumns[columnIndex] & relevantRowsBitMask)
-												== (validColumnCombinations[columnIndex].ElementAt(validColumnIndex) & relevantRowsBitMask))
+												== (validColumn & relevantRowsBitMask))
 								{
 										foundMatch = true;
 								}
