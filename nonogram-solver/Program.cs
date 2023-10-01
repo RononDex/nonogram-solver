@@ -4,7 +4,7 @@ using System.Numerics;
 
 public class NonoGramSolver
 {
-		static IEnumerator<string> inputLines = File.ReadLines("nonogram.in").GetEnumerator();
+		static IEnumerator<string> inputLines;
 		static string NextLine() { if (!inputLines.MoveNext()) throw new Exception(); return inputLines.Current; }
 
 		public static ushort numRows;
@@ -27,7 +27,7 @@ public class NonoGramSolver
 				// Pre-Processing
 				FindValidDimensionCombinations(numRows, validRowCombinations!, rowBlocks!, numColumns);
 				FindValidDimensionCombinations(numColumns, validColumnCombinations!, columnBlocks!, numRows);
-				for (var i = 0; i < 5; i++)
+				for (var i = 0; i < 10; i++)
 				{
 						FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
 						FilterImpossibleCombinations(numColumns, validColumnCombinations, numRows, validRowCombinations);
