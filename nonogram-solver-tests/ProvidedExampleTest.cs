@@ -1,4 +1,3 @@
-
 using System.Collections;
 
 namespace nonogram_solver_tests;
