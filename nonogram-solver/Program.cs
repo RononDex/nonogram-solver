@@ -29,8 +29,8 @@ public class NonoGramSolver
 				FindValidDimensionCombinations(numColumns, validColumnCombinations!, columnBlocks!, numRows);
 				for (var i = 0; i < 10; i++)
 				{
-						FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
 						FilterImpossibleCombinations(numColumns, validColumnCombinations, numRows, validRowCombinations);
+						FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
 				}
 
 				// Solving
