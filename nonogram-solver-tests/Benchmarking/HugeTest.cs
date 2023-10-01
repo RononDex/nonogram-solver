@@ -10,15 +10,21 @@ namespace nonogram_solver_tests.Benchmarking;
 public class HugeTest
 {
 
-    [GlobalSetup]
-    public void Setup()
-    {
-        File.Copy("samples/huge.in", "nonogram.in", true);
-    }
+		[GlobalSetup]
+		public void Setup()
+		{
+				File.Copy("samples/huge.in", "nonogram.in", true);
+		}
 
-    [Benchmark]
-    public void HugeExample()
-    {
-        NonoGramSolver.Main();
-    }
+		[Benchmark]
+		public void HugeExample()
+		{
+				NonoGramSolver.Main();
+		}
+
+		[GlobalCleanup]
+		public void OutputInfo()
+		{
+				Console.WriteLine($"Found {NonoGramSolver.solutions.Count} solution");
+		}
 }

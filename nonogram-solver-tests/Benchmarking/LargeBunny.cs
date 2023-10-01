@@ -9,15 +9,21 @@ namespace nonogram_solver_tests.Benchmarking;
 public class LargeBunny
 {
 
-    [GlobalSetup]
-    public void Setup()
-    {
-        File.Copy("samples/example1.in", "nonogram.in", true);
-    }
+		[GlobalSetup]
+		public void Setup()
+		{
+				File.Copy("samples/example1.in", "nonogram.in", true);
+		}
 
-    [Benchmark]
-    public void LargeBunnyExample()
-    {
-        NonoGramSolver.Main();
-    }
+		[Benchmark]
+		public void LargeBunnyExample()
+		{
+				NonoGramSolver.Main();
+		}
+
+		[GlobalCleanup]
+		public void OutputInfo()
+		{
+				Console.WriteLine($"Found {NonoGramSolver.solutions.Count} solution");
+		}
 }

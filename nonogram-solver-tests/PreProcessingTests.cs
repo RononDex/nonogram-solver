@@ -10,11 +10,7 @@ public class PreProcessingTests
 				File.Copy("samples/duck.in", "nonogram.in", true);
 
 				NonoGramSolver.ParseInput();
-				NonoGramSolver.FindValidDimensionCombinations(
-					NonoGramSolver.numRows,
-					NonoGramSolver.validRowCombinations!,
-					NonoGramSolver.rowBlocks!,
-					NonoGramSolver.numColumns);
+				NonoGramSolver.FindValidCombinations();
 
 				Assert.AreEqual(9, NonoGramSolver.validRowCombinations.Count);
 

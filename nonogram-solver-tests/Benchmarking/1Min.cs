@@ -9,15 +9,22 @@ namespace nonogram_solver_tests.Benchmarking;
 public class OneMin
 {
 
-    [GlobalSetup]
-    public void Setup()
-    {
-        File.Copy("samples/1min.in", "nonogram.in", true);
-    }
+		[GlobalSetup]
+		public void Setup()
+		{
+				File.Copy("samples/1min.in", "nonogram.in", true);
+		}
 
-    [Benchmark]
-    public void OneMinExample()
-    {
-        NonoGramSolver.Main();
-    }
+		[Benchmark]
+		public void OneMinExample()
+		{
+				NonoGramSolver.Main();
+		}
+
+
+		[GlobalCleanup]
+		public void OutputInfo()
+		{
+				Console.WriteLine($"Found {NonoGramSolver.solutions.Count} solution");
+		}
 }
