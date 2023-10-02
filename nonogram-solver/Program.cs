@@ -30,7 +30,6 @@ public class NonoGramSolver
         for (var i = 0; i < 10; i++)
         {
             FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
-            // FilterImpossibleCombinations(numColumns, validColumnCombinations, numRows, validRowCombinations);
         }
 
         // Solving
@@ -77,10 +76,10 @@ public class NonoGramSolver
 
     public static void FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<Int128>> validXCombinations, int numYAxis, Dictionary<int, HashSet<Int128>> validYCombinations)
     {
-        var knownOnesX = validXCombinations.ToDictionary(e => e.Key, e => e.Value.Aggregate(rowBitMask, (x, y) => x & y)).Select(e => e.Value & rowBitMask).ToArray();
-        var knownZerosX = validXCombinations.ToDictionary(e => e.Key, e => e.Value.Select(e => (~e) & rowBitMask).Aggregate(rowBitMask, (x, y) => x & y)).Select(e => e.Value).ToArray();
-        var knownOnesY = validYCombinations.ToDictionary(e => e.Key, e => e.Value.Aggregate(columnBitMask, (x, y) => x & y)).Select(e => e.Value & columnBitMask).ToArray();
-        var knownZerosY = validYCombinations.ToDictionary(e => e.Key, e => e.Value.Select(e => (~e) & columnBitMask).Aggregate(columnBitMask, (x, y) => x & y)).Select(e => e.Value).ToArray();
+        var knownOnesX = validXCombinations.ToDictionary(e => e.Key, e => e.Value.Aggregate(rowBitMask, (x, y) => x & y)).Select(x => x.Value).ToArray();
+        var knownZerosX = validXCombinations.ToDictionary(e => e.Key, e => e.Value.Select(e => (~e) & rowBitMask).Aggregate(rowBitMask, (x, y) => x & y)).Select(x => x.Value).ToArray();
+        var knownOnesY = validYCombinations.ToDictionary(e => e.Key, e => e.Value.Aggregate(columnBitMask, (x, y) => x & y)).Select(x => x.Value).ToArray();
+        var knownZerosY = validYCombinations.ToDictionary(e => e.Key, e => e.Value.Select(e => (~e) & columnBitMask).Aggregate(columnBitMask, (x, y) => x & y)).Select(x => x.Value).ToArray();
 
         ushort smallerDimensionIndex = numColumns < numRows ? numColumns : numRows;
         smallerDimensionIndex--;
@@ -97,48 +96,6 @@ public class NonoGramSolver
             validColumnCombinations[y].RemoveWhere(e => (~e & knownOnesY[y]) != 0);
             validColumnCombinations[y].RemoveWhere(e => (e & knownZerosY[y]) != 0);
         }
-
-        // for (ushort x = 0; x < numXAxis; x++)
-        // {
-        // 	var yBitMask = (1L << x);
-        // 	var validXAxisEntries = validXCombinations[x];
-
-
-        // 	for (ushort y = 0; y < numYAxis; y++)
-        // 	{
-        // 		var validYAxisEntries = validYCombinations[y];
-        // 		var xBitMask = (1L << y);
-        // 		var filledFieldsInXAxis = false;
-        // 		var emptyFieldsInXAxis = false;
-
-        // 		foreach (var validXComb in validXAxisEntries)
-        // 		{
-        // 			if ((validXComb & xBitMask) != 0)
-        // 			{
-        // 				filledFieldsInXAxis = true;
-        // 			}
-        // 			else
-        // 			{
-        // 				emptyFieldsInXAxis = true;
-        // 			}
-
-        // 			if (emptyFieldsInXAxis && filledFieldsInXAxis) break;
-        // 		}
-
-        // 		// If there are no combinations in the X axis that are filled at the given x/y coordinates
-        // 		// we can remove all y combinations that are empty at this location
-        // 		if (!filledFieldsInXAxis)
-        // 		{
-        // 			validXAxisEntries.RemoveWhere(e => (e & yBitMask) != 0);
-        // 		}
-        // 		// Same for empty fields
-        // 		if (!emptyFieldsInXAxis)
-        // 		{
-        // 			validXAxisEntries.RemoveWhere(e => (e & yBitMask) == 0);
-        // 		}
-
-        // 	}
-        // }
     }
 
     public static void FindSolutions()
