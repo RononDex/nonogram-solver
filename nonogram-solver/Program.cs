@@ -1,4 +1,4 @@
-//code by tino.heuberger@students.fhnw.ch
+﻿//code by tino.heuberger@students.fhnw.ch
 using System.Globalization;
 using System.Numerics;
 
@@ -14,6 +14,7 @@ public class NonoGramSolver
     public static Dictionary<int, HashSet<Int128>>? validRowCombinations;
     public static Dictionary<int, HashSet<Int128>>? validColumnCombinations;
     public static Int128[][] validColumnCombinationsFinal;
+    public static Int128[][] validRowCombinationsFinal;
     public static Dictionary<int, List<Int128>>? solutions;
 
     public static Int128 rowBitMask;
@@ -28,17 +29,24 @@ public class NonoGramSolver
 
         // Pre-Processing
         FindValidCombinations();
-        int numberOfIterations = (int)(numColumns * numRows / 15);
+        int numberOfIterations = (int)MathF.Sqrt(numColumns * numRows);
         for (var i = 0; i < numberOfIterations; i++)
         {
             FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
         }
-        validColumnCombinationsFinal = new Int128[numColumns][];
 
-        // Store valid column combinations in arrays now, making iterating over them much much faster
-        for (var i = 0; i < numColumns; i++) {
+        // Store valid column and row combinations in arrays now, making iterating over them much much faster
+        validColumnCombinationsFinal = new Int128[numColumns][];
+        for (var i = 0; i < numColumns; i++)
+        {
             validColumnCombinationsFinal[i] = new Int128[validColumnCombinations[i].Count];
             validColumnCombinations[i].CopyTo(validColumnCombinationsFinal[i]);
+        }
+        validRowCombinationsFinal = new Int128[numRows][];
+        for (var i = 0; i < numRows; i++)
+        {
+            validRowCombinationsFinal[i] = new Int128[validRowCombinations[i].Count];
+            validRowCombinations[i].CopyTo(validRowCombinationsFinal[i]);
         }
 
         // Solving
@@ -61,8 +69,8 @@ public class NonoGramSolver
         Int128[] bitMasks = new Int128[numColumns];
         for (var i = 0; i < numColumns; i++)
         {
-            bitMasks[i] = 0;
-            bitMasks[i] |= (Int128.One << i);
+            bitMasks[i] = Int128.Zero;
+            bitMasks[i] |= Int128.One << i;
         }
         using (var outp = new StreamWriter("nonogram.out"))
         {
@@ -85,10 +93,39 @@ public class NonoGramSolver
 
     public static void FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<Int128>> validXCombinations, int numYAxis, Dictionary<int, HashSet<Int128>> validYCombinations)
     {
-        var knownOnesX = validXCombinations.Select(e => e.Value.Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
-        var knownZerosX = validXCombinations.Select(e => e.Value.Select(e => (~e) & rowBitMask).Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
-        var knownOnesY = validYCombinations.Select(e => e.Value.Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
-        var knownZerosY = validYCombinations.Select(e => e.Value.Select(e => (~e) & columnBitMask).Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
+        var knownOnesX = new Int128[numXAxis];
+        var knownZerosX = new Int128[numXAxis];
+        for (var i = 0; i < numXAxis; i++)
+        {
+            knownOnesX[i] = rowBitMask;
+            knownZerosX[i] = rowBitMask;
+
+            foreach (var validCombination in validXCombinations[i])
+            {
+                knownOnesX[i] &= validCombination;
+                knownZerosX[i] &= ~validCombination;
+            }
+
+            knownZerosX[i] &= rowBitMask;
+        }
+        var knownOnesY = new Int128[numYAxis];
+        var knownZerosY = new Int128[numYAxis];
+        for (var i = 0; i < numYAxis; i++)
+        {
+            knownOnesY[i] = columnBitMask;
+            knownZerosY[i] = columnBitMask;
+
+            foreach (var validCombination in validYCombinations[i])
+            {
+                knownOnesY[i] &= validCombination;
+                knownZerosY[i] &= ~validCombination;
+            }
+            knownZerosY[i] &= columnBitMask;
+        }
+        // var knownOnesX = validXCombinations.Select(e => e.Value.Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
+        // var knownZerosX = validXCombinations.Select(e => e.Value.Select(e => (~e) & rowBitMask).Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
+        // var knownOnesY = validYCombinations.Select(e => e.Value.Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
+        // var knownZerosY = validYCombinations.Select(e => e.Value.Select(e => (~e) & columnBitMask).Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
 
         ushort smallerDimensionIndex = numColumns < numRows ? numColumns : numRows;
         smallerDimensionIndex--;
@@ -111,19 +148,23 @@ public class NonoGramSolver
     {
         var emptyBoardRows = new Int128[numRows];
         var emptyBoardColumns = new Int128[numColumns];
-        FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan());
+        var currentColumnStartIndices = new int[numColumns];
+        FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan(), currentColumnStartIndices);
     }
 
-    private static void FindSolutionRecursive(int rowIndex, Span<Int128> boardRows, Span<Int128> boardColumns)
+    private static void FindSolutionRecursive(int rowIndex, Span<Int128> boardRows, Span<Int128> boardColumns, int[] currentColumnStartIndices)
     {
         var isLastRow = rowIndex == numRows - 1;
-        foreach (var combination in validRowCombinations![rowIndex])
+        for (int combinationIndex = 0; combinationIndex < validRowCombinationsFinal![rowIndex].Length; combinationIndex++)
         {
+            var copyOfCurrentColumnStartIndices = new int[currentColumnStartIndices.Length];
+            Array.Copy(currentColumnStartIndices, copyOfCurrentColumnStartIndices, currentColumnStartIndices.Length);
+            var combination = validRowCombinationsFinal[rowIndex][combinationIndex];
             // Pick a valid row combination to try
             boardRows[rowIndex] = combination;
             UpdateColumnBoard(boardColumns, ref boardRows[rowIndex], ref rowIndex);
 
-            var hasValidColumns = IsValidPartialSolution(boardColumns, ref rowIndex);
+            var hasValidColumns = IsValidPartialSolution(boardColumns, ref rowIndex, copyOfCurrentColumnStartIndices);
 
             if (hasValidColumns && isLastRow)
             {
@@ -131,7 +172,7 @@ public class NonoGramSolver
             }
             else if (hasValidColumns && !isLastRow)
             {
-                FindSolutionRecursive(rowIndex + 1, boardRows, boardColumns);
+                FindSolutionRecursive(rowIndex + 1, boardRows, boardColumns, copyOfCurrentColumnStartIndices);
             }
         }
     }
@@ -139,7 +180,7 @@ public class NonoGramSolver
     /// Validate if the current calculated columns are still valid according to
     /// the precalculated valid column combinations
     /// </summary>
-    private static bool IsValidPartialSolution(Span<Int128> boardColumns, ref int rowIndex)
+    private static bool IsValidPartialSolution(Span<Int128> boardColumns, ref int rowIndex, int[] currentColumnStartIndices)
     {
         Int128 relevantRowsBitMask = 0;
         for (var row = 0; row <= rowIndex; row++)
@@ -149,13 +190,17 @@ public class NonoGramSolver
         for (ushort columnIndex = 0; columnIndex < numColumns; columnIndex++)
         {
             bool foundMatch = false;
-            for (var validColumnIndex = 0; validColumnIndex < validColumnCombinationsFinal[columnIndex].Length; validColumnIndex++)
+            for (var validColumnIndex = currentColumnStartIndices[columnIndex]; validColumnIndex < validColumnCombinationsFinal[columnIndex].Length; validColumnIndex++)
             {
                 var validColumn = validColumnCombinationsFinal[columnIndex][validColumnIndex];
                 if ((boardColumns[columnIndex] & relevantRowsBitMask)
                                 == (validColumn & relevantRowsBitMask))
                 {
                     foundMatch = true;
+
+                    // update currentColumnStartIndices so we don't have to check the previous columns again
+                    // as those will all fail for future checks
+                    currentColumnStartIndices[columnIndex] = validColumnIndex;
                     break;
                 }
             }
@@ -176,7 +221,7 @@ public class NonoGramSolver
             // set bit to 1 on column if row has bit set
             if ((newlyChosenRow & (Int128.One << column)) != 0)
             {
-                boardColumns[column] |= (Int128.One << rowIndex);
+                boardColumns[column] |= Int128.One << rowIndex;
             }
             else
             {
