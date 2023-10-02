@@ -14,7 +14,9 @@ public class NonoGramSolver
     public static Dictionary<int, HashSet<Int128>>? validRowCombinations;
     public static Dictionary<int, HashSet<Int128>>? validColumnCombinations;
     public static Int128[][] validColumnCombinationsFinal;
-    public static Int128[][] validRowCombinationsFinal;
+    public static Int128[] knownOnesRows;
+    public static Int128[] knownZerosRows;
+    public static Int128[] unknownRows;
     public static Dictionary<int, List<Int128>>? solutions;
 
     public static Int128 rowBitMask;
@@ -24,17 +26,20 @@ public class NonoGramSolver
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
+        // ----------------------
         // Parsing
+        // ----------------------
         ParseInput();
 
+        // ----------------------
         // Pre-Processing
+        // ----------------------
         FindValidCombinations();
         int numberOfIterations = (int)MathF.Sqrt(numColumns * numRows);
         for (var i = 0; i < numberOfIterations; i++)
         {
             FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
         }
-
         // Store valid column and row combinations in arrays now, making iterating over them much much faster
         validColumnCombinationsFinal = new Int128[numColumns][];
         for (var i = 0; i < numColumns; i++)
@@ -42,16 +47,23 @@ public class NonoGramSolver
             validColumnCombinationsFinal[i] = new Int128[validColumnCombinations[i].Count];
             validColumnCombinations[i].CopyTo(validColumnCombinationsFinal[i]);
         }
-        validRowCombinationsFinal = new Int128[numRows][];
+        // Find yet unknown bits and mark them with 1
+        unknownRows = new Int128[numRows];
         for (var i = 0; i < numRows; i++)
         {
-            validRowCombinationsFinal[i] = new Int128[validRowCombinations[i].Count];
-            validRowCombinations[i].CopyTo(validRowCombinationsFinal[i]);
+            unknownRows[i] = knownOnesRows[i] | knownZerosRows[i];
+            unknownRows[i] = (~unknownRows[i]) & rowBitMask;
         }
 
+        // ----------------------
         // Solving
+        // ----------------------
         FindSolutions();
 
+
+        // ----------------------
+        // Output
+        // ----------------------
 #if DEBUG
         Console.WriteLine($"Found {solutions.Count} solutions");
 #endif
@@ -59,8 +71,6 @@ public class NonoGramSolver
         {
             return;
         }
-
-        // Output
         OutputSolutions();
     }
 
@@ -122,10 +132,6 @@ public class NonoGramSolver
             }
             knownZerosY[i] &= columnBitMask;
         }
-        // var knownOnesX = validXCombinations.Select(e => e.Value.Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
-        // var knownZerosX = validXCombinations.Select(e => e.Value.Select(e => (~e) & rowBitMask).Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
-        // var knownOnesY = validYCombinations.Select(e => e.Value.Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
-        // var knownZerosY = validYCombinations.Select(e => e.Value.Select(e => (~e) & columnBitMask).Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
 
         ushort smallerDimensionIndex = numColumns < numRows ? numColumns : numRows;
         smallerDimensionIndex--;
@@ -142,6 +148,9 @@ public class NonoGramSolver
             validColumnCombinations[y].RemoveWhere(e => (~e & knownOnesY[y]) != 0);
             validColumnCombinations[y].RemoveWhere(e => (e & knownZerosY[y]) != 0);
         }
+
+        knownOnesRows = knownOnesX;
+        knownZerosRows = knownZerosX;
     }
 
     public static void FindSolutions()
@@ -155,11 +164,11 @@ public class NonoGramSolver
     private static void FindSolutionRecursive(int rowIndex, Span<Int128> boardRows, Span<Int128> boardColumns, int[] currentColumnStartIndices)
     {
         var isLastRow = rowIndex == numRows - 1;
-        for (int combinationIndex = 0; combinationIndex < validRowCombinationsFinal![rowIndex].Length; combinationIndex++)
+        for (int combinationIndex = 0; combinationIndex < validRowCombinations![rowIndex].Count; combinationIndex++)
         {
             var copyOfCurrentColumnStartIndices = new int[currentColumnStartIndices.Length];
             Array.Copy(currentColumnStartIndices, copyOfCurrentColumnStartIndices, currentColumnStartIndices.Length);
-            var combination = validRowCombinationsFinal[rowIndex][combinationIndex];
+            var combination = validRowCombinations[rowIndex].ElementAt(combinationIndex);
             // Pick a valid row combination to try
             boardRows[rowIndex] = combination;
             UpdateColumnBoard(boardColumns, ref boardRows[rowIndex], ref rowIndex);
