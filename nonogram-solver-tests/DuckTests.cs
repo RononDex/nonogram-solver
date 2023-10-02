@@ -75,8 +75,6 @@ public class DuckTests
         for (var i = 0; i < 10; i++)
         {
             NonoGramSolver.FilterImpossibleCombinations(NonoGramSolver.numRows, NonoGramSolver.validRowCombinations, NonoGramSolver.numColumns, NonoGramSolver.validColumnCombinations);
-            // NonoGramSolver.FilterImpossibleCombinations(NonoGramSolver.numColumns, NonoGramSolver.validColumnCombinations, NonoGramSolver.numRows, NonoGramSolver.validRowCombinations);
-
 
             VerifySolutionIsStillInValidCombinations();
         }
