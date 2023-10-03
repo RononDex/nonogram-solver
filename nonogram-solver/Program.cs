@@ -30,9 +30,23 @@ public class NonoGramSolver
         // Pre-Processing
         FindValidCombinations();
         int numberOfIterations = (int)MathF.Sqrt(numColumns * numRows);
+        int rowPossibilitiesCount = validRowCombinations.Select(x => x.Value).Sum(x => x.Count);
+        int columnPossibilitiesCount = validColumnCombinations.Select(x => x.Value).Sum(x => x.Count);
         for (var i = 0; i < numberOfIterations; i++)
         {
             FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
+            int newRowPossibilitiesCount = validRowCombinations.Select(x => x.Value).Sum(x => x.Count);
+            int newColumnPossibilitiesCount = validColumnCombinations.Select(x => x.Value).Sum(x => x.Count);
+            if (newRowPossibilitiesCount == rowPossibilitiesCount && columnPossibilitiesCount == newColumnPossibilitiesCount)
+            {
+#if DEBUG
+                Console.WriteLine($"No more filtered possibilities after {i + 1} iterations");
+#endif
+                break;
+            }
+
+            rowPossibilitiesCount = newRowPossibilitiesCount;
+            columnPossibilitiesCount = newColumnPossibilitiesCount;
         }
 
         // Solving
@@ -108,12 +122,8 @@ public class NonoGramSolver
             }
             knownZerosY[i] &= columnBitMask;
         }
-        // var knownOnesX = validXCombinations.Select(e => e.Value.Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
-        // var knownZerosX = validXCombinations.Select(e => e.Value.Select(e => (~e) & rowBitMask).Aggregate(rowBitMask, (x, y) => x & y)).ToArray();
-        // var knownOnesY = validYCombinations.Select(e => e.Value.Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
-        // var knownZerosY = validYCombinations.Select(e => e.Value.Select(e => (~e) & columnBitMask).Aggregate(columnBitMask, (x, y) => x & y)).ToArray();
 
-        ushort smallerDimensionIndex = numColumns < numRows ? numColumns : numRows;
+        int smallerDimensionIndex = numYAxis < numXAxis ? numYAxis : numXAxis;
         smallerDimensionIndex--;
 
         SyncKnownFields(knownOnesX, knownZerosX, knownZerosY, knownOnesY, ref smallerDimensionIndex);
@@ -157,6 +167,22 @@ public class NonoGramSolver
         var isLastRow = rowIndex == numRows - 1;
         var knownValidZerosInRow = Int128.Zero;
         var knownValidOnesInRow = Int128.Zero;
+
+        // Shortcut if there is only one valid combination
+        if (validRowCombinationsFinal[rowIndex].Length == 1)
+        {
+            boardRows[rowIndex] = validRowCombinationsFinal[rowIndex][0];
+            UpdateColumnBoard(boardColumns, ref boardRows[rowIndex], ref rowIndex);
+            if (isLastRow)
+            {
+                solutions.Add((ushort)solutions.Count, new List<Int128>(boardRows.ToArray()));
+            }
+            else
+            {
+                FindSolutionRecursive(rowIndex + 1, boardRows, boardColumns, currentColumnStartIndices);
+            }
+            return;
+        }
 
         for (int combinationIndex = 0; combinationIndex < validRowCombinationsFinal![rowIndex].Length; combinationIndex++)
         {
@@ -283,7 +309,7 @@ public class NonoGramSolver
         var knownFieldsWithZerosByColumns = new Int128[numColumns].AsSpan();
         var knownFieldsWithOnesByColumns = new Int128[numColumns].AsSpan();
 
-        for (ushort index = 0; index < biggerDimensionSize; index++)
+        for (int index = 0; index < biggerDimensionSize; index++)
         {
             if (index < numRows)
             {
@@ -318,6 +344,7 @@ public class NonoGramSolver
                         knownFieldsWithOnesByColumns,
                         ref index);
                 }
+
             }
             if (index < numColumns)
             {
@@ -345,8 +372,23 @@ public class NonoGramSolver
 
                 if (index < smallerDimensionSize)
                 {
-                    SyncKnownFields(knownFieldsWithOnesByRows, knownFieldsWithZerosByRows, knownFieldsWithZerosByColumns, knownFieldsWithOnesByColumns, ref index);
+                    SyncKnownFields(
+                            knownFieldsWithOnesByRows,
+                            knownFieldsWithZerosByRows,
+                            knownFieldsWithZerosByColumns,
+                            knownFieldsWithOnesByColumns,
+                            ref index);
+
                 }
+
+                // Remove already clearly invalid possibilities
+                // Helpt to reduce the memory spike at the beginning when loading
+                // all valid combinations
+                FilterImpossibleCombinations(
+                        index + 1 > numRows ? numRows : index + 1,
+                        validRowCombinations,
+                        index + 1 > numColumns ? numColumns : index + 1,
+                        validColumnCombinations);
             }
         }
     }
@@ -356,11 +398,11 @@ public class NonoGramSolver
         Span<Int128> knownFieldsWithZerosByRows,
         Span<Int128> knownFieldsWithZerosByColumns,
         Span<Int128> knownFieldsWithOnesByColumns,
-        ref ushort index)
+        ref int index)
     {
-        for (ushort row = 0; row <= index; row++)
+        for (int row = 0; row <= index; row++)
         {
-            for (ushort column = 0; column <= index; column++)
+            for (int column = 0; column <= index; column++)
             {
                 if ((knownFieldsWithOnesByRows[row] & (Int128.One << column)) != 0)
                 {
