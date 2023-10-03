@@ -12,10 +12,13 @@ $(table_Rows_Selector + " tr").each((element, obj) => {
   $(obj)
     .find("td")
     .toArray()
-    .forEach((element) => {
+    .forEach((element, idx, array) => {
       var text = $(element).text();
       if (text != "") {
-        output += text + " ";
+        output += text;
+        if (idx != array.length - 1) {
+          output += " ";
+        }
       }
     });
 
@@ -50,7 +53,10 @@ $(table_Columns_Selector + " tr")
 for (var i = 0; i < $(table_Columns_Selector + " tr:first td").length; i++) {
   for (var j = 0; j < columns[i].length; j++) {
     if (columns[i][j] != "") {
-      output += columns[i][j] + " ";
+      output += columns[i][j];
+      if (j != columns[i].length - 1) {
+        output += " ";
+      }
     }
   }
 

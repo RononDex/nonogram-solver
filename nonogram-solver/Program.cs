@@ -1,4 +1,4 @@
-﻿//code by tino.heuberger@students.fhnw.ch
+//code by tino.heuberger@students.fhnw.ch
 using System.Globalization;
 
 public class NonoGramSolver
@@ -8,8 +8,8 @@ public class NonoGramSolver
 
     public static ushort numRows;
     public static ushort numColumns;
-    public static Dictionary<int, List<ushort>>? rowBlocks;
-    public static Dictionary<int, List<ushort>>? columnBlocks;
+    public static Dictionary<int, ushort[]>? rowBlocks;
+    public static Dictionary<int, ushort[]>? columnBlocks;
     public static Dictionary<int, HashSet<Int128>>? validRowCombinations;
     public static Dictionary<int, HashSet<Int128>>? validColumnCombinations;
     public static Int128[][] validColumnCombinationsFinal;
@@ -29,23 +29,16 @@ public class NonoGramSolver
         // Pre-Processing
         FindValidCombinations();
         int numberOfIterations = (int)MathF.Sqrt(numColumns * numRows);
-        int rowPossibilitiesCount = validRowCombinations.Select(x => x.Value).Sum(x => x.Count);
-        int columnPossibilitiesCount = validColumnCombinations.Select(x => x.Value).Sum(x => x.Count);
         for (var i = 0; i < numberOfIterations; i++)
         {
-            FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
-            int newRowPossibilitiesCount = validRowCombinations.Select(x => x.Value).Sum(x => x.Count);
-            int newColumnPossibilitiesCount = validColumnCombinations.Select(x => x.Value).Sum(x => x.Count);
-            if (newRowPossibilitiesCount == rowPossibilitiesCount && columnPossibilitiesCount == newColumnPossibilitiesCount)
+            var removedCombinations = FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
+            if (removedCombinations == 0)
             {
 #if DEBUG
                 Console.WriteLine($"No more filtered possibilities after {i + 1} iterations");
 #endif
                 break;
             }
-
-            rowPossibilitiesCount = newRowPossibilitiesCount;
-            columnPossibilitiesCount = newColumnPossibilitiesCount;
         }
 
         // Solving
@@ -90,7 +83,7 @@ public class NonoGramSolver
         }
     }
 
-    public static void FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<Int128>> validXCombinations, int numYAxis, Dictionary<int, HashSet<Int128>> validYCombinations)
+    public static int FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<Int128>> validXCombinations, int numYAxis, Dictionary<int, HashSet<Int128>> validYCombinations)
     {
         var knownOnesX = new Int128[numXAxis];
         var knownZerosX = new Int128[numXAxis];
@@ -127,16 +120,19 @@ public class NonoGramSolver
 
         SyncKnownFields(knownOnesX, knownZerosX, knownZerosY, knownOnesY, ref smallerDimensionIndex);
 
+        int removedEntities = 0;
         for (ushort x = 0; x < numXAxis; x++)
         {
-            validRowCombinations[x].RemoveWhere(e => (~e & knownOnesX[x]) != 0);
-            validRowCombinations[x].RemoveWhere(e => (e & knownZerosX[x]) != 0);
+            removedEntities += validRowCombinations[x].RemoveWhere(e => (~e & knownOnesX[x]) != 0);
+            removedEntities += validRowCombinations[x].RemoveWhere(e => (e & knownZerosX[x]) != 0);
         }
         for (ushort y = 0; y < numYAxis; y++)
         {
-            validColumnCombinations[y].RemoveWhere(e => (~e & knownOnesY[y]) != 0);
-            validColumnCombinations[y].RemoveWhere(e => (e & knownZerosY[y]) != 0);
+            removedEntities += validColumnCombinations[y].RemoveWhere(e => (~e & knownOnesY[y]) != 0);
+            removedEntities += validColumnCombinations[y].RemoveWhere(e => (e & knownZerosY[y]) != 0);
         }
+
+        return removedEntities;
     }
 
     public static void FindSolutions()
@@ -424,7 +420,7 @@ public class NonoGramSolver
     }
 
     private static void FindValidDimensionCombinationsRecursive(
-                        List<ushort> blocks,
+                        ushort[] blocks,
                         int blockIndex,
                         Int128 curElement,
                         HashSet<Int128> validList,
@@ -435,7 +431,7 @@ public class NonoGramSolver
                         ref Int128 alreadyKnownOnes,
                         ref Int128 alreadyKnownZeros)
     {
-        if (blocks.Count == 0)
+        if (blocks.Length == 0)
         {
             knownZeros = 0;
             for (int x = 0; x < otherDimensionLength; x++)
@@ -446,12 +442,18 @@ public class NonoGramSolver
             knownOnes = 0;
             return;
         }
-        var blockLength = blocks.ElementAt(blockIndex);
+        var blockLength = blocks[blockIndex];
+        var remainingBlocksSizes = 0;
+        for (var i = blockIndex + 1; i < blocks.Length; i++)
+        {
+            remainingBlocksSizes += blocks[i] + 1;
+        }
+
         // Determine where the last possible startIndex for this block Is
         // Corresponds to the last possible index where the remaining blocks (including 1 space in between) can still be placed
         var maxStartIndex =
                 otherDimensionLength
-                - blocks.Skip(blockIndex + 1).Sum(b => b + 1) // +1 since we need at least one empty space in between each block
+                - remainingBlocksSizes
                 - startIndex
                 - blockLength
                 + startIndex;
@@ -464,7 +466,7 @@ public class NonoGramSolver
                 curElement |= Int128.One << (start + x);
             }
 
-            if (blockIndex == blocks.Count - 1)
+            if (blockIndex == blocks.Length - 1)
             {
                 // Make sure that we are not violating any already known bits
                 if ((alreadyKnownOnes & ~curElement) == 0 && (alreadyKnownZeros & curElement) == 0)
@@ -508,8 +510,8 @@ public class NonoGramSolver
         var firstLine = NextLine().Split(" ");
         numColumns = byte.Parse(firstLine[0]);
         numRows = byte.Parse(firstLine[1]);
-        rowBlocks = new Dictionary<int, List<ushort>>(numRows);
-        columnBlocks = new Dictionary<int, List<ushort>>(numColumns);
+        rowBlocks = new Dictionary<int, ushort[]>(numRows);
+        columnBlocks = new Dictionary<int, ushort[]>(numColumns);
         validRowCombinations = new Dictionary<int, HashSet<Int128>>(numRows);
         validColumnCombinations = new Dictionary<int, HashSet<Int128>>(numColumns);
         solutions = new();
@@ -517,24 +519,24 @@ public class NonoGramSolver
         for (int row = 0; row < numRows; row++)
         {
             var rowLine = NextLine().Split(" ");
-            rowBlocks[row] = new List<ushort>(rowLine.Length);
+            rowBlocks[row] = new ushort[rowLine.Length];
 
             for (var block = 0; block < rowLine.Length; block++)
             {
                 if (rowLine[block].Length > 0)
-                    rowBlocks[row].Add(byte.Parse(rowLine[block]));
+                    rowBlocks[row][block] = UInt16.Parse(rowLine[block]);
             }
         }
 
         for (int column = 0; column < numColumns; column++)
         {
             var columnLine = NextLine().Split(" ");
-            columnBlocks[column] = new List<ushort>(columnLine.Length);
+            columnBlocks[column] = new ushort[columnLine.Length];
 
             for (var block = 0; block < columnLine.Length; block++)
             {
                 if (columnLine[block].Length > 0)
-                    columnBlocks[column].Add(byte.Parse(columnLine[block]));
+                    columnBlocks[column][block] = UInt16.Parse(columnLine[block]);
             }
         }
 
