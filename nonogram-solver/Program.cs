@@ -1,4 +1,4 @@
-﻿//code by tino.heuberger@students.fhnw.ch
+//code by tino.heuberger@students.fhnw.ch
 using System.Globalization;
 using System.Numerics;
 
@@ -58,7 +58,7 @@ public class NonoGramSolver
         // ----------------------
         // Solving
         // ----------------------
-        FindSolutions();
+        /* FindSolutions(); */
 
 
         // ----------------------
@@ -406,17 +406,21 @@ public class NonoGramSolver
             }
             else
             {
-                FindValidDimensionCombinationsRecursive(
-                                blocks,
-                                blockIndex + 1,
-                                curElement,
-                                validList,
-                                start + blockLength + (ushort)1,
-                                otherDimensionLength,
-                                ref knownOnes,
-                                ref knownZeros,
-                                ref alreadyKnownOnes,
-                                ref alreadyKnownZeros);
+                // Make sure that we are not violating any already known bits
+                if ((alreadyKnownZeros & curElement) == 0)
+                {
+                    FindValidDimensionCombinationsRecursive(
+                                    blocks,
+                                    blockIndex + 1,
+                                    curElement,
+                                    validList,
+                                    start + blockLength + (ushort)1,
+                                    otherDimensionLength,
+                                    ref knownOnes,
+                                    ref knownZeros,
+                                    ref alreadyKnownOnes,
+                                    ref alreadyKnownZeros);
+                }
             }
 
             // reset all bits from current block onwards to 0
