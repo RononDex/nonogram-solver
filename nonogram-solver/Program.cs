@@ -1,5 +1,6 @@
 //code by tino.heuberger@students.fhnw.ch
 using System.Globalization;
+using System.Runtime.Intrinsics;
 
 public class NonoGramSolver
 {
@@ -22,34 +23,36 @@ public class NonoGramSolver
     public static void Main()
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-        // Parsing
-        ParseInput();
-
-        // Pre-Processing
-        FindValidCombinations();
-        int numberOfIterations = (int)MathF.Sqrt(numColumns * numRows);
-        for (var i = 0; i < numberOfIterations; i++)
+        checked
         {
-            var removedCombinations = FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
-            if (removedCombinations == 0)
+            // Parsing
+            ParseInput();
+
+            // Pre-Processing
+            FindValidCombinations();
+            int numberOfIterations = (int)MathF.Sqrt(numColumns * numRows);
+            for (var i = 0; i < numberOfIterations; i++)
             {
+                var removedCombinations = FilterImpossibleCombinations(numRows, validRowCombinations, numColumns, validColumnCombinations);
+                if (removedCombinations == 0)
+                {
 #if DEBUG
-                Console.WriteLine($"No more filtered possibilities after {i + 1} iterations");
+                    Console.WriteLine($"No more filtered possibilities after {i + 1} iterations");
 #endif
-                break;
+                    break;
+                }
             }
-        }
 
-        // Solving
-        FindSolutions();
+            // Solving
+            FindSolutions();
 
 #if DEBUG
-        Console.WriteLine($"Found {solutions.Count} solutions");
+            Console.WriteLine($"Found {solutions.Count} solutions");
 #endif
-        if (solutions.Count == 0)
-        {
-            return;
+            if (solutions.Count == 0)
+            {
+                return;
+            }
         }
 
         // Output
@@ -157,7 +160,7 @@ public class NonoGramSolver
         FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan(), currentColumnStartIndices);
     }
 
-    private static void FindSolutionRecursive(int rowIndex, Span<Int128> boardRows, Span<Int128> boardColumns, ushort[] currentColumnStartIndices)
+    private static void FindSolutionRecursive(int rowIndex, Span<Int128> boardRows, Span<Int128> boardColumns, Span<ushort> currentColumnStartIndices)
     {
         var isLastRow = rowIndex == numRows - 1;
         var knownValidZerosInRow = Int128.Zero;
@@ -181,8 +184,8 @@ public class NonoGramSolver
 
         for (int combinationIndex = 0; combinationIndex < validRowCombinationsFinal![rowIndex].Length; combinationIndex++)
         {
-            var copyOfCurrentColumnStartIndices = new ushort[currentColumnStartIndices.Length];
-            Array.Copy(currentColumnStartIndices, copyOfCurrentColumnStartIndices, currentColumnStartIndices.Length);
+            var copyOfCurrentColumnStartIndices = new ushort[currentColumnStartIndices.Length].AsSpan();
+            currentColumnStartIndices.CopyTo(copyOfCurrentColumnStartIndices);
             var combination = validRowCombinationsFinal[rowIndex][combinationIndex];
             if (combinationIndex > 0)
             {
@@ -222,7 +225,7 @@ public class NonoGramSolver
             Span<Int128> boardColumns,
             Span<Int128> boardRows,
             ref int rowIndex,
-            ushort[] currentColumnStartIndices,
+            Span<ushort> currentColumnStartIndices,
             ref Int128 knownValidOnes,
             ref Int128 knownValidZeros)
     {
@@ -236,19 +239,21 @@ public class NonoGramSolver
 
         for (ushort columnIndex = 0; columnIndex < numColumns; columnIndex++)
         {
+            var slice = validColumnCombinationsFinal[columnIndex].AsSpan().Slice(currentColumnStartIndices[columnIndex]);
+
             // Only validate if something changed in this column
             if ((columnsToCheck & (Int128.One << columnIndex)) != 0)
             {
                 var foundMatch = false;
-                for (var validColumnIndex = currentColumnStartIndices[columnIndex]; validColumnIndex < validColumnCombinationsFinal[columnIndex].Length; validColumnIndex++)
+                for (ushort validColumnIndex = 0; validColumnIndex < slice.Length; validColumnIndex++)
                 {
-                    var validColumn = validColumnCombinationsFinal[columnIndex][validColumnIndex];
+                    var validColumn = slice[validColumnIndex];
                     if ((boardColumns[columnIndex] & relevantRowsBitMask)
                                     == (validColumn & relevantRowsBitMask))
                     {
                         // update currentColumnStartIndices so we don't have to check the previous columns again
                         // as those will all fail for future checks
-                        currentColumnStartIndices[columnIndex] = validColumnIndex;
+                        currentColumnStartIndices[columnIndex] += validColumnIndex;
 
                         // mark this column as known to be valid
                         var bitMask = Int128.One << columnIndex;
@@ -539,7 +544,6 @@ public class NonoGramSolver
                     columnBlocks[column][block] = UInt16.Parse(columnLine[block]);
             }
         }
-
 
         rowBitMask = Int128.Zero;
         for (var x = 0; x < numColumns; x++)
