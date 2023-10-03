@@ -4,7 +4,7 @@ using BenchmarkDotNet.Jobs;
 
 namespace nonogram_solver_tests.Benchmarking;
 
-[SimpleJob(RunStrategy.ColdStart, RuntimeMoniker.Net70, launchCount: 3, warmupCount: 1, iterationCount: 3)]
+[SimpleJob(RunStrategy.ColdStart, RuntimeMoniker.Net70, launchCount: 3, warmupCount: 2, iterationCount: 4)]
 [MemoryDiagnoser]
 public class LargeBunny
 {

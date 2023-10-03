@@ -153,11 +153,11 @@ public class NonoGramSolver
 
         var emptyBoardRows = new Int128[numRows];
         var emptyBoardColumns = new Int128[numColumns];
-        var currentColumnStartIndices = new int[numColumns];
+        var currentColumnStartIndices = new ushort[numColumns];
         FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan(), currentColumnStartIndices);
     }
 
-    private static void FindSolutionRecursive(int rowIndex, Span<Int128> boardRows, Span<Int128> boardColumns, int[] currentColumnStartIndices)
+    private static void FindSolutionRecursive(int rowIndex, Span<Int128> boardRows, Span<Int128> boardColumns, ushort[] currentColumnStartIndices)
     {
         var isLastRow = rowIndex == numRows - 1;
         var knownValidZerosInRow = Int128.Zero;
@@ -181,7 +181,7 @@ public class NonoGramSolver
 
         for (int combinationIndex = 0; combinationIndex < validRowCombinationsFinal![rowIndex].Length; combinationIndex++)
         {
-            var copyOfCurrentColumnStartIndices = new int[currentColumnStartIndices.Length];
+            var copyOfCurrentColumnStartIndices = new ushort[currentColumnStartIndices.Length];
             Array.Copy(currentColumnStartIndices, copyOfCurrentColumnStartIndices, currentColumnStartIndices.Length);
             var combination = validRowCombinationsFinal[rowIndex][combinationIndex];
             if (combinationIndex > 0)
@@ -222,7 +222,7 @@ public class NonoGramSolver
             Span<Int128> boardColumns,
             Span<Int128> boardRows,
             ref int rowIndex,
-            int[] currentColumnStartIndices,
+            ushort[] currentColumnStartIndices,
             ref Int128 knownValidOnes,
             ref Int128 knownValidZeros)
     {
