@@ -1,6 +1,5 @@
-//code by tino.heuberger@students.fhnw.ch
+﻿//code by tino.heuberger@students.fhnw.ch
 using System.Globalization;
-using System.Numerics;
 
 public class NonoGramSolver
 {
@@ -86,7 +85,7 @@ public class NonoGramSolver
 
                     outp.Write(chars);
                 }
-                outp.Write("\r\n");
+                outp.Write("\n");
             }
         }
     }
