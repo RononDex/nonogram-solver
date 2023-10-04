@@ -4,8 +4,8 @@ namespace nonogram_solver_tests;
 
 public class DuckTests
 {
-    private static Dictionary<int, List<Int128>> solution_rows = new Dictionary<int, List<Int128>>() {
-                {0, new List<Int128>(new Int128[] {
+    private static Dictionary<int, List<long>> solution_rows = new Dictionary<int, List<long>>() {
+                {0, new List<long>(new long[] {
                         0b000001110,
                         0b000001011,
                         0b011001110,
@@ -18,8 +18,8 @@ public class DuckTests
                  })},
         };
 
-    private static Dictionary<int, List<Int128>> solution_cols = new Dictionary<int, List<Int128>>() {
-                {0, new List<Int128>(new Int128[] {
+    private static Dictionary<int, List<long>> solution_cols = new Dictionary<int, List<long>>() {
+                {0, new List<long>(new long[] {
                         0b001100010,
                         0b001000111,
                         0b001111101,
