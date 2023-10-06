@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace nonogram_solver_tests;
 
 public class DuckTests
 {
-    private static Dictionary<int, List<long>> solution_rows = new Dictionary<int, List<long>>() {
-                {0, new List<long>(new long[] {
+    private static Dictionary<int, List<BigInteger>> solution_rows = new Dictionary<int, List<BigInteger>>() {
+                {0, new List<BigInteger>(new BigInteger[] {
                         0b000001110,
                         0b000001011,
                         0b011001110,
@@ -18,8 +19,8 @@ public class DuckTests
                  })},
         };
 
-    private static Dictionary<int, List<long>> solution_cols = new Dictionary<int, List<long>>() {
-                {0, new List<long>(new long[] {
+    private static Dictionary<int, List<BigInteger>> solution_cols = new Dictionary<int, List<BigInteger>>() {
+                {0, new List<BigInteger>(new BigInteger[] {
                         0b001100010,
                         0b001000111,
                         0b001111101,
@@ -74,9 +75,9 @@ public class DuckTests
 
         for (var i = 0; i < 10; i++)
         {
-            // NonoGramSolver.FilterImpossibleCombinations(NonoGramSolver.numRows, NonoGramSolver.validRowCombinations, NonoGramSolver.numColumns, NonoGramSolver.validColumnCombinations);
+            NonoGramSolver.FilterImpossibleCombinations(NonoGramSolver.numRows, NonoGramSolver.validRowCombinations, NonoGramSolver.numColumns, NonoGramSolver.validColumnCombinations);
 
-            // VerifySolutionIsStillInValidCombinations();
+            VerifySolutionIsStillInValidCombinations();
         }
 
         NonoGramSolver.FindSolutions();
