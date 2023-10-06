@@ -1,7 +1,6 @@
 //code by tino.heuberger@students.fhnw.ch
 using System.Globalization;
 using System.Numerics;
-using System.Runtime.Intrinsics;
 
 public class NonoGramSolver
 {
@@ -20,6 +19,7 @@ public class NonoGramSolver
         {
             // Parsing
             ParseInput();
+            var type = typeof(IBinaryInteger<BigInteger>);
 
             var largerDimensionSize = numColumns > numRows ? numColumns : numRows;
             if (largerDimensionSize <= 16)

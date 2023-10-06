@@ -20,10 +20,4 @@ public class LargeBunny
 		{
 				NonoGramSolver.Main();
 		}
-
-		[GlobalCleanup]
-		public void OutputInfo()
-		{
-				Console.WriteLine($"Found {NonoGramSolver.solutions.Count} solution");
-		}
 }

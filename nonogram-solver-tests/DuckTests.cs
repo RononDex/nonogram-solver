@@ -1,12 +1,12 @@
-using System.Collections.Generic;
 using System.Numerics;
+using static NonoGramSolver;
 
 namespace nonogram_solver_tests;
 
 public class DuckTests
 {
-    private static Dictionary<int, List<BigInteger>> solution_rows = new Dictionary<int, List<BigInteger>>() {
-                {0, new List<BigInteger>(new BigInteger[] {
+    private static Dictionary<int, List<uint>> solution_rows = new Dictionary<int, List<uint>>() {
+                {0, new List<uint>(new uint[] {
                         0b000001110,
                         0b000001011,
                         0b011001110,
@@ -19,8 +19,8 @@ public class DuckTests
                  })},
         };
 
-    private static Dictionary<int, List<BigInteger>> solution_cols = new Dictionary<int, List<BigInteger>>() {
-                {0, new List<BigInteger>(new BigInteger[] {
+    private static Dictionary<int, List<uint>> solution_cols = new Dictionary<int, List<uint>>() {
+                {0, new List<uint>(new uint[] {
                         0b001100010,
                         0b001000111,
                         0b001111101,
@@ -69,36 +69,39 @@ public class DuckTests
     {
         File.Copy("samples/duck.in", "nonogram.in", true);
         NonoGramSolver.ParseInput();
-        NonoGramSolver.FindValidCombinations();
 
-        VerifySolutionIsStillInValidCombinations();
+
+        var solver = new GenericNonoGramSolver<uint>(NonoGramSolver.numRows, NonoGramSolver.numColumns, NonoGramSolver.rowBlocks, NonoGramSolver.columnBlocks);
+        solver.FindValidCombinations();
+
+        VerifySolutionIsStillInValidCombinations(solver);
 
         for (var i = 0; i < 10; i++)
         {
-            NonoGramSolver.FilterImpossibleCombinations(NonoGramSolver.numRows, NonoGramSolver.validRowCombinations, NonoGramSolver.numColumns, NonoGramSolver.validColumnCombinations);
+            solver.FilterImpossibleCombinations(NonoGramSolver.numRows, solver.validRowCombinations, solver.numColumns, solver.validColumnCombinations);
 
-            VerifySolutionIsStillInValidCombinations();
+            VerifySolutionIsStillInValidCombinations(solver);
         }
 
-        NonoGramSolver.FindSolutions();
+        solver.FindSolutions();
 
-        Assert.AreEqual(1, NonoGramSolver.solutions.Count);
+        Assert.AreEqual(1, solver.solutions.Count);
         for (var row = 0; row < solution_rows.Count; row++)
         {
-            Assert.AreEqual(solution_rows[0][row], NonoGramSolver.solutions[0][row]);
+            Assert.AreEqual(solution_rows[0][row], solver.solutions[0][row]);
         }
     }
 
-    private static void VerifySolutionIsStillInValidCombinations()
+    private static void VerifySolutionIsStillInValidCombinations(GenericNonoGramSolver<uint> solver)
     {
         for (var row = 0; row < solution_rows[0].Count; row++)
         {
-            Assert.True(NonoGramSolver.validRowCombinations[row].Any(r => r.Equals(solution_rows[0][row])));
+            Assert.True(solver.validRowCombinations[row].Any(r => r.Equals(solution_rows[0][row])));
         }
 
         for (var col = 0; col < solution_cols[0].Count; col++)
         {
-            Assert.True(NonoGramSolver.validColumnCombinations[col].Any(r => r.Equals(solution_cols[0][col])));
+            Assert.True(solver.validColumnCombinations[col].Any(r => r.Equals(solution_cols[0][col])));
         }
     }
 }

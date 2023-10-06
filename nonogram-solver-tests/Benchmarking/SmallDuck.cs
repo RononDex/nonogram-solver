@@ -21,10 +21,4 @@ public class SmallDuck
 		{
 				NonoGramSolver.Main();
 		}
-
-		[GlobalCleanup]
-		public void OutputInfo()
-		{
-				Console.WriteLine($"Found {NonoGramSolver.solutions.Count} solution");
-		}
 }
