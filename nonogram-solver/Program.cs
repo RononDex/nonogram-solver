@@ -20,37 +20,71 @@ public class NonoGramSolver
             // Parsing
             ParseInput();
 
-            /* var largerDimensionSize = numColumns > numRows ? numColumns : numRows; */
-            /* if (largerDimensionSize <= 16) */
-            /* { */
-            /*     var solver = new GenericNonoGramSolver<ushort>(numRows, numColumns, rowBlocks!, columnBlocks!); */
-            /*     solver.FindSolutions(); */
-            /* } */
-            /* else if (largerDimensionSize <= 32) */
-            /* { */
-            /*     var solver = new GenericNonoGramSolver<uint>(numRows, numColumns, rowBlocks!, columnBlocks!); */
-            /*     solver.FindSolutions(); */
-            /* } */
-            /* else if (largerDimensionSize <= 64) */
-            /* { */
-            /*     var solver = new GenericNonoGramSolver<ulong>(numRows, numColumns, rowBlocks!, columnBlocks!); */
-            /*     solver.FindSolutions(); */
-            /* } */
-            /* else if (largerDimensionSize <= 128) */
-            /* { */
-            /*     var solver = new GenericNonoGramSolver<UInt128>(numRows, numColumns, rowBlocks!, columnBlocks!); */
-            /*     solver.FindSolutions(); */
-            /* } */
-            /* else */
-            /* { */
-            /*     var solver = new GenericNonoGramSolver<BigInteger>(numRows, numColumns, rowBlocks!, columnBlocks!); */
-            /*     solver.FindSolutions(); */
-            /* } */
-
-            var solver = new GenericNonoGramSolver<uint, ulong>(numRows, numColumns, rowBlocks!, columnBlocks!);
-            solver.FindSolutions();
+            if (numColumns <= 8)
+            {
+                if (numRows <= 8) SolveNonoGram<byte, byte>();
+                else if (numRows <= 16) SolveNonoGram<byte, ushort>();
+                else if (numRows <= 32) SolveNonoGram<byte, uint>();
+                else if (numRows <= 64) SolveNonoGram<byte, ulong>();
+                else if (numRows <= 128) SolveNonoGram<byte, UInt128>();
+                else SolveNonoGram<byte, BigInteger>();
+            }
+            if (numColumns <= 16)
+            {
+                if (numRows <= 8) SolveNonoGram<ushort, byte>();
+                else if (numRows <= 16) SolveNonoGram<ushort, ushort>();
+                else if (numRows <= 32) SolveNonoGram<ushort, uint>();
+                else if (numRows <= 64) SolveNonoGram<ushort, ulong>();
+                else if (numRows <= 128) SolveNonoGram<ushort, UInt128>();
+                else SolveNonoGram<ushort, BigInteger>();
+            }
+            else if (numColumns <= 32)
+            {
+                if (numRows <= 8) SolveNonoGram<uint, byte>();
+                else if (numRows <= 16) SolveNonoGram<uint, ushort>();
+                else if (numRows <= 32) SolveNonoGram<uint, uint>();
+                else if (numRows <= 64) SolveNonoGram<uint, ulong>();
+                else if (numRows <= 128) SolveNonoGram<uint, UInt128>();
+                else SolveNonoGram<uint, BigInteger>();
+            }
+            else if (numColumns <= 64)
+            {
+                if (numRows <= 8) SolveNonoGram<ulong, byte>();
+                else if (numRows <= 16) SolveNonoGram<ulong, ushort>();
+                else if (numRows <= 32) SolveNonoGram<ulong, uint>();
+                else if (numRows <= 64) SolveNonoGram<ulong, ulong>();
+                else if (numRows <= 128) SolveNonoGram<ulong, UInt128>();
+                else SolveNonoGram<ulong, BigInteger>();
+            }
+            else if (numColumns <= 128)
+            {
+                if (numRows <= 8) SolveNonoGram<UInt128, byte>();
+                else if (numRows <= 16) SolveNonoGram<UInt128, ushort>();
+                else if (numRows <= 32) SolveNonoGram<UInt128, uint>();
+                else if (numRows <= 64) SolveNonoGram<UInt128, ulong>();
+                else if (numRows <= 128) SolveNonoGram<UInt128, UInt128>();
+                else SolveNonoGram<UInt128, BigInteger>();
+            }
+            else
+            {
+                if (numRows <= 8) SolveNonoGram<BigInteger, byte>();
+                else if (numRows <= 16) SolveNonoGram<BigInteger, ushort>();
+                else if (numRows <= 32) SolveNonoGram<BigInteger, uint>();
+                else if (numRows <= 64) SolveNonoGram<BigInteger, ulong>();
+                else if (numRows <= 128) SolveNonoGram<BigInteger, UInt128>();
+                else SolveNonoGram<BigInteger, BigInteger>();
+            }
         }
     }
+
+    public static void SolveNonoGram<TRow, TColumn>()
+        where TRow : IBinaryInteger<TRow>
+        where TColumn : IBinaryInteger<TColumn>
+    {
+        var solver = new GenericNonoGramSolver<TRow, TColumn>(numRows, numColumns, rowBlocks!, columnBlocks!);
+        solver.FindSolutions();
+    }
+
     /// <summary>
     /// Parses the input files and fills static instance variables (numColumns, numRows, rowBlocks, columnBlocks)
     /// </summary>
