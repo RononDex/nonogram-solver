@@ -71,7 +71,7 @@ public class DuckTests
         NonoGramSolver.ParseInput();
 
 
-        var solver = new GenericNonoGramSolver<uint>(NonoGramSolver.numRows, NonoGramSolver.numColumns, NonoGramSolver.rowBlocks, NonoGramSolver.columnBlocks);
+        var solver = new GenericNonoGramSolver<uint, uint>(NonoGramSolver.numRows, NonoGramSolver.numColumns, NonoGramSolver.rowBlocks, NonoGramSolver.columnBlocks);
         solver.FindValidCombinations();
 
         VerifySolutionIsStillInValidCombinations(solver);
@@ -92,7 +92,7 @@ public class DuckTests
         }
     }
 
-    private static void VerifySolutionIsStillInValidCombinations(GenericNonoGramSolver<uint> solver)
+    private static void VerifySolutionIsStillInValidCombinations(GenericNonoGramSolver<uint, uint> solver)
     {
         for (var row = 0; row < solution_rows[0].Count; row++)
         {

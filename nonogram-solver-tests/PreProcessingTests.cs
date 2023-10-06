@@ -10,7 +10,7 @@ public class PreProcessingTests
         File.Copy("samples/duck.in", "nonogram.in", true);
         NonoGramSolver.ParseInput();
 
-        var solver = new GenericNonoGramSolver<ushort>(NonoGramSolver.numRows, NonoGramSolver.numColumns, NonoGramSolver.rowBlocks, NonoGramSolver.columnBlocks);
+        var solver = new GenericNonoGramSolver<ushort, ushort>(NonoGramSolver.numRows, NonoGramSolver.numColumns, NonoGramSolver.rowBlocks, NonoGramSolver.columnBlocks);
         solver.FindValidCombinations();
 
         Assert.AreEqual(9, solver.validRowCombinations.Count);

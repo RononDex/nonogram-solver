@@ -19,34 +19,36 @@ public class NonoGramSolver
         {
             // Parsing
             ParseInput();
-            var type = typeof(IBinaryInteger<BigInteger>);
 
-            var largerDimensionSize = numColumns > numRows ? numColumns : numRows;
-            if (largerDimensionSize <= 16)
-            {
-                var solver = new GenericNonoGramSolver<ushort>(numRows, numColumns, rowBlocks!, columnBlocks!);
-                solver.FindSolutions();
-            }
-            else if (largerDimensionSize <= 32)
-            {
-                var solver = new GenericNonoGramSolver<uint>(numRows, numColumns, rowBlocks!, columnBlocks!);
-                solver.FindSolutions();
-            }
-            else if (largerDimensionSize <= 64)
-            {
-                var solver = new GenericNonoGramSolver<ulong>(numRows, numColumns, rowBlocks!, columnBlocks!);
-                solver.FindSolutions();
-            }
-            else if (largerDimensionSize <= 128)
-            {
-                var solver = new GenericNonoGramSolver<UInt128>(numRows, numColumns, rowBlocks!, columnBlocks!);
-                solver.FindSolutions();
-            }
-            else
-            {
-                var solver = new GenericNonoGramSolver<BigInteger>(numRows, numColumns, rowBlocks!, columnBlocks!);
-                solver.FindSolutions();
-            }
+            /* var largerDimensionSize = numColumns > numRows ? numColumns : numRows; */
+            /* if (largerDimensionSize <= 16) */
+            /* { */
+            /*     var solver = new GenericNonoGramSolver<ushort>(numRows, numColumns, rowBlocks!, columnBlocks!); */
+            /*     solver.FindSolutions(); */
+            /* } */
+            /* else if (largerDimensionSize <= 32) */
+            /* { */
+            /*     var solver = new GenericNonoGramSolver<uint>(numRows, numColumns, rowBlocks!, columnBlocks!); */
+            /*     solver.FindSolutions(); */
+            /* } */
+            /* else if (largerDimensionSize <= 64) */
+            /* { */
+            /*     var solver = new GenericNonoGramSolver<ulong>(numRows, numColumns, rowBlocks!, columnBlocks!); */
+            /*     solver.FindSolutions(); */
+            /* } */
+            /* else if (largerDimensionSize <= 128) */
+            /* { */
+            /*     var solver = new GenericNonoGramSolver<UInt128>(numRows, numColumns, rowBlocks!, columnBlocks!); */
+            /*     solver.FindSolutions(); */
+            /* } */
+            /* else */
+            /* { */
+            /*     var solver = new GenericNonoGramSolver<BigInteger>(numRows, numColumns, rowBlocks!, columnBlocks!); */
+            /*     solver.FindSolutions(); */
+            /* } */
+
+            var solver = new GenericNonoGramSolver<uint, ulong>(numRows, numColumns, rowBlocks!, columnBlocks!);
+            solver.FindSolutions();
         }
     }
     /// <summary>
@@ -87,20 +89,22 @@ public class NonoGramSolver
     }
 
 
-    public class GenericNonoGramSolver<T> where T : IBinaryInteger<T>
+    public class GenericNonoGramSolver<TRow, TColumn>
+        where TRow : IBinaryInteger<TRow>
+        where TColumn : IBinaryInteger<TColumn>
     {
         public ushort numRows;
         public ushort numColumns;
         public Dictionary<int, ushort[]> rowBlocks;
         public Dictionary<int, ushort[]> columnBlocks;
-        public Dictionary<int, HashSet<T>> validRowCombinations;
-        public Dictionary<int, HashSet<T>> validColumnCombinations;
-        public T[][] validColumnCombinationsFinal;
-        public T[][] validRowCombinationsFinal;
-        public Dictionary<int, List<T>> solutions;
+        public Dictionary<int, HashSet<TRow>> validRowCombinations;
+        public Dictionary<int, HashSet<TColumn>> validColumnCombinations;
+        public TColumn[][] validColumnCombinationsFinal;
+        public TRow[][] validRowCombinationsFinal;
+        public Dictionary<int, List<TRow>> solutions;
 
-        public T rowBitMask;
-        public T columnBitMask;
+        public TRow rowBitMask;
+        public TColumn columnBitMask;
 
         public GenericNonoGramSolver(ushort numRows, ushort numColumn, Dictionary<int, ushort[]> rowBlocks, Dictionary<int, ushort[]> columnBlocks)
         {
@@ -109,19 +113,19 @@ public class NonoGramSolver
             this.rowBlocks = rowBlocks;
             this.columnBlocks = columnBlocks;
 
-            validRowCombinations = new Dictionary<int, HashSet<T>>(numRows);
-            validColumnCombinations = new Dictionary<int, HashSet<T>>(numColumns);
+            validRowCombinations = new Dictionary<int, HashSet<TRow>>(numRows);
+            validColumnCombinations = new Dictionary<int, HashSet<TColumn>>(numColumns);
             solutions = new();
 
-            rowBitMask = T.Zero;
+            rowBitMask = TRow.Zero;
             for (var x = 0; x < numColumns; x++)
             {
-                rowBitMask |= T.One << x;
+                rowBitMask |= TRow.One << x;
             }
-            columnBitMask = T.Zero;
+            columnBitMask = TColumn.Zero;
             for (var y = 0; y < numRows; y++)
             {
-                columnBitMask |= T.One << y;
+                columnBitMask |= TColumn.One << y;
             }
         }
 
@@ -152,10 +156,10 @@ public class NonoGramSolver
 
 
 
-        public int FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<T>> validXCombinations, int numYAxis, Dictionary<int, HashSet<T>> validYCombinations)
+        public int FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<TRow>> validXCombinations, int numYAxis, Dictionary<int, HashSet<TColumn>> validYCombinations)
         {
-            var knownOnesX = new T[numXAxis];
-            var knownZerosX = new T[numXAxis];
+            var knownOnesX = new TRow[numXAxis];
+            var knownZerosX = new TRow[numXAxis];
             for (var i = 0; i < numXAxis; i++)
             {
                 knownOnesX[i] = rowBitMask;
@@ -169,8 +173,8 @@ public class NonoGramSolver
 
                 knownZerosX[i] &= rowBitMask;
             }
-            var knownOnesY = new T[numYAxis];
-            var knownZerosY = new T[numYAxis];
+            var knownOnesY = new TColumn[numYAxis];
+            var knownZerosY = new TColumn[numYAxis];
             for (var i = 0; i < numYAxis; i++)
             {
                 knownOnesY[i] = columnBitMask;
@@ -192,13 +196,13 @@ public class NonoGramSolver
             int removedEntities = 0;
             for (ushort x = 0; x < numXAxis; x++)
             {
-                removedEntities += validRowCombinations[x].RemoveWhere(e => (~e & knownOnesX[x]) != T.Zero);
-                removedEntities += validRowCombinations[x].RemoveWhere(e => (e & knownZerosX[x]) != T.Zero);
+                removedEntities += validRowCombinations[x].RemoveWhere(e => (~e & knownOnesX[x]) != TRow.Zero);
+                removedEntities += validRowCombinations[x].RemoveWhere(e => (e & knownZerosX[x]) != TRow.Zero);
             }
             for (ushort y = 0; y < numYAxis; y++)
             {
-                removedEntities += validColumnCombinations[y].RemoveWhere(e => (~e & knownOnesY[y]) != T.Zero);
-                removedEntities += validColumnCombinations[y].RemoveWhere(e => (e & knownZerosY[y]) != T.Zero);
+                removedEntities += validColumnCombinations[y].RemoveWhere(e => (~e & knownOnesY[y]) != TColumn.Zero);
+                removedEntities += validColumnCombinations[y].RemoveWhere(e => (e & knownZerosY[y]) != TColumn.Zero);
             }
 
             return removedEntities;
@@ -207,30 +211,30 @@ public class NonoGramSolver
         public void FindSolutionsEntryPoint()
         {
             // Store valid column and row combinations in arrays now, making iterating over them much much faster
-            validColumnCombinationsFinal = new T[numColumns][];
+            validColumnCombinationsFinal = new TColumn[numColumns][];
             for (var i = 0; i < numColumns; i++)
             {
-                validColumnCombinationsFinal[i] = new T[validColumnCombinations[i].Count];
+                validColumnCombinationsFinal[i] = new TColumn[validColumnCombinations[i].Count];
                 validColumnCombinations[i].CopyTo(validColumnCombinationsFinal[i]);
             }
-            validRowCombinationsFinal = new T[numRows][];
+            validRowCombinationsFinal = new TRow[numRows][];
             for (var i = 0; i < numRows; i++)
             {
-                validRowCombinationsFinal[i] = new T[validRowCombinations[i].Count];
+                validRowCombinationsFinal[i] = new TRow[validRowCombinations[i].Count];
                 validRowCombinations[i].CopyTo(validRowCombinationsFinal[i]);
             }
 
-            var emptyBoardRows = new T[numRows];
-            var emptyBoardColumns = new T[numColumns];
+            var emptyBoardRows = new TRow[numRows];
+            var emptyBoardColumns = new TColumn[numColumns];
             var currentColumnStartIndices = new ushort[numColumns];
             FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan(), currentColumnStartIndices);
         }
 
-        private void FindSolutionRecursive(int rowIndex, Span<T> boardRows, Span<T> boardColumns, Span<ushort> currentColumnStartIndices)
+        private void FindSolutionRecursive(int rowIndex, Span<TRow> boardRows, Span<TColumn> boardColumns, Span<ushort> currentColumnStartIndices)
         {
             var isLastRow = rowIndex == numRows - 1;
-            var knownValidZerosInRow = T.Zero;
-            var knownValidOnesInRow = T.Zero;
+            var knownValidZerosInRow = TRow.Zero;
+            var knownValidOnesInRow = TRow.Zero;
 
             // Shortcut if there is only one valid combination
             if (validRowCombinationsFinal[rowIndex].Length == 1)
@@ -239,7 +243,7 @@ public class NonoGramSolver
                 UpdateColumnBoard(boardColumns, ref boardRows[rowIndex], ref rowIndex);
                 if (isLastRow)
                 {
-                    solutions.Add((ushort)solutions.Count, new List<T>(boardRows.ToArray()));
+                    solutions.Add((ushort)solutions.Count, new List<TRow>(boardRows.ToArray()));
                 }
                 else
                 {
@@ -275,7 +279,7 @@ public class NonoGramSolver
 
                 if (hasValidColumns && isLastRow)
                 {
-                    solutions.Add((ushort)solutions.Count, new List<T>(boardRows.ToArray()));
+                    solutions.Add((ushort)solutions.Count, new List<TRow>(boardRows.ToArray()));
                 }
                 else if (hasValidColumns && !isLastRow)
                 {
@@ -288,17 +292,17 @@ public class NonoGramSolver
         /// the precalculated valid column combinations
         /// </summary>
         private bool IsValidPartialSolution(
-                Span<T> boardColumns,
-                Span<T> boardRows,
+                Span<TColumn> boardColumns,
+                Span<TRow> boardRows,
                 ref int rowIndex,
                 Span<ushort> currentColumnStartIndices,
-                ref T knownValidOnes,
-                ref T knownValidZeros)
+                ref TRow knownValidOnes,
+                ref TRow knownValidZeros)
         {
-            var relevantRowsBitMask = T.Zero;
+            var relevantRowsBitMask = TColumn.Zero;
             for (var row = 0; row <= rowIndex; row++)
             {
-                relevantRowsBitMask |= T.One << row;
+                relevantRowsBitMask |= TColumn.One << row;
             }
 
             var columnsToCheck = (~(knownValidOnes | knownValidZeros)) & rowBitMask;
@@ -308,7 +312,7 @@ public class NonoGramSolver
                 var slice = validColumnCombinationsFinal[columnIndex].AsSpan().Slice(currentColumnStartIndices[columnIndex]);
 
                 // Only validate if something changed in this column
-                if ((columnsToCheck & (T.One << columnIndex)) != T.Zero)
+                if ((columnsToCheck & (TRow.One << columnIndex)) != TRow.Zero)
                 {
                     var foundMatch = false;
                     for (ushort validColumnIndex = 0; validColumnIndex < slice.Length; validColumnIndex++)
@@ -322,8 +326,8 @@ public class NonoGramSolver
                             currentColumnStartIndices[columnIndex] += validColumnIndex;
 
                             // mark this column as known to be valid
-                            var bitMask = T.One << columnIndex;
-                            if ((boardRows[rowIndex] & bitMask) != T.Zero)
+                            var bitMask = TRow.One << columnIndex;
+                            if ((boardRows[rowIndex] & bitMask) != TRow.Zero)
                                 knownValidOnes |= bitMask;
                             else
                                 knownValidZeros |= bitMask;
@@ -344,19 +348,19 @@ public class NonoGramSolver
             return true;
         }
 
-        private void UpdateColumnBoard(Span<T> boardColumns, ref T newlyChosenRow, ref int rowIndex)
+        private void UpdateColumnBoard(Span<TColumn> boardColumns, ref TRow newlyChosenRow, ref int rowIndex)
         {
             for (ushort column = 0; column < numColumns; column++)
             {
                 // set bit to 1 on column if row has bit set
-                if ((newlyChosenRow & (T.One << column)) != T.Zero)
+                if ((newlyChosenRow & (TRow.One << column)) != TRow.Zero)
                 {
-                    boardColumns[column] |= T.One << rowIndex;
+                    boardColumns[column] |= TColumn.One << rowIndex;
                 }
                 else
                 {
                     // reset value to 0
-                    boardColumns[column] &= ~(T.One << rowIndex);
+                    boardColumns[column] &= ~(TColumn.One << rowIndex);
                 }
             }
         }
@@ -370,10 +374,10 @@ public class NonoGramSolver
         {
             ushort biggerDimensionSize = numColumns > numRows ? numColumns : numRows;
             ushort smallerDimensionSize = numColumns < numRows ? numColumns : numRows;
-            var knownFieldsWithOnesByRows = new T[numRows].AsSpan();
-            var knownFieldsWithZerosByRows = new T[numRows].AsSpan();
-            var knownFieldsWithZerosByColumns = new T[numColumns].AsSpan();
-            var knownFieldsWithOnesByColumns = new T[numColumns].AsSpan();
+            var knownFieldsWithOnesByRows = new TRow[numRows].AsSpan();
+            var knownFieldsWithZerosByRows = new TRow[numRows].AsSpan();
+            var knownFieldsWithZerosByColumns = new TColumn[numColumns].AsSpan();
+            var knownFieldsWithOnesByColumns = new TColumn[numColumns].AsSpan();
 
             for (int index = 0; index < biggerDimensionSize; index++)
             {
@@ -381,14 +385,14 @@ public class NonoGramSolver
                 {
                     // Create initial value with all bits active
                     // Known zeros / ones will be marked with an active bit after the recursive call below
-                    var summedRowsWithOnes = ~(T.Zero) & rowBitMask;
-                    var summedRowsWithZeros = ~(T.Zero) & rowBitMask;
+                    var summedRowsWithOnes = ~(TRow.Zero) & rowBitMask;
+                    var summedRowsWithZeros = ~(TRow.Zero) & rowBitMask;
 
-                    var validList = new HashSet<T>();
-                    FindValidDimensionCombinationsRecursive(
+                    var validList = new HashSet<TRow>();
+                    FindValidDimensionCombinationsRecursive<TRow>(
                                     rowBlocks[index],
                                     0,
-                                    T.Zero,
+                                    TRow.Zero,
                                     validList,
                                     0,
                                     numColumns,
@@ -416,14 +420,14 @@ public class NonoGramSolver
                 {
                     // Create initial value with all bits active
                     // Known zeros / ones will be marked with an active bit after the recursive call below
-                    var summedColumnsWithOnes = ~(T.Zero) & columnBitMask;
-                    var summedColumnsWithZeros = ~(T.Zero) & columnBitMask;
+                    var summedColumnsWithOnes = ~(TColumn.Zero) & columnBitMask;
+                    var summedColumnsWithZeros = ~(TColumn.Zero) & columnBitMask;
 
-                    var validList = new HashSet<T>();
-                    FindValidDimensionCombinationsRecursive(
+                    var validList = new HashSet<TColumn>();
+                    FindValidDimensionCombinationsRecursive<TColumn>(
                                     columnBlocks[index],
                                     0,
-                                    T.Zero,
+                                    TColumn.Zero,
                                     validList,
                                     0,
                                     numRows,
@@ -460,37 +464,37 @@ public class NonoGramSolver
         }
 
         private void SyncKnownFields(
-            Span<T> knownFieldsWithOnesByRows,
-            Span<T> knownFieldsWithZerosByRows,
-            Span<T> knownFieldsWithZerosByColumns,
-            Span<T> knownFieldsWithOnesByColumns,
+            Span<TRow> knownFieldsWithOnesByRows,
+            Span<TRow> knownFieldsWithZerosByRows,
+            Span<TColumn> knownFieldsWithZerosByColumns,
+            Span<TColumn> knownFieldsWithOnesByColumns,
             ref int index)
         {
             for (int row = 0; row <= index; row++)
             {
                 for (int column = 0; column <= index; column++)
                 {
-                    if ((knownFieldsWithOnesByRows[row] & (T.One << column)) != T.Zero)
+                    if ((knownFieldsWithOnesByRows[row] & (TRow.One << column)) != TRow.Zero)
                     {
-                        knownFieldsWithOnesByColumns[column] |= T.One << row;
+                        knownFieldsWithOnesByColumns[column] |= TColumn.One << row;
                     }
-                    if ((knownFieldsWithZerosByRows[row] & (T.One << column)) != T.Zero)
+                    if ((knownFieldsWithZerosByRows[row] & (TRow.One << column)) != TRow.Zero)
                     {
-                        knownFieldsWithZerosByColumns[column] |= T.One << row;
+                        knownFieldsWithZerosByColumns[column] |= TColumn.One << row;
                     }
-                    if ((knownFieldsWithOnesByColumns[column] & (T.One << row)) != T.Zero)
+                    if ((knownFieldsWithOnesByColumns[column] & (TColumn.One << row)) != TColumn.Zero)
                     {
-                        knownFieldsWithOnesByRows[row] |= T.One << column;
+                        knownFieldsWithOnesByRows[row] |= TRow.One << column;
                     }
-                    if ((knownFieldsWithZerosByColumns[column] & (T.One << row)) != T.Zero)
+                    if ((knownFieldsWithZerosByColumns[column] & (TColumn.One << row)) != TColumn.Zero)
                     {
-                        knownFieldsWithZerosByRows[row] |= T.One << column;
+                        knownFieldsWithZerosByRows[row] |= TRow.One << column;
                     }
                 }
             }
         }
 
-        private void FindValidDimensionCombinationsRecursive(
+        private void FindValidDimensionCombinationsRecursive<T>(
                             ushort[] blocks,
                             int blockIndex,
                             T curElement,
@@ -501,6 +505,7 @@ public class NonoGramSolver
                             ref T knownZeros,
                             ref T alreadyKnownOnes,
                             ref T alreadyKnownZeros)
+            where T : IBinaryInteger<T>
         {
             if (blocks.Length == 0)
             {
@@ -574,11 +579,11 @@ public class NonoGramSolver
 
         private void OutputSolutions()
         {
-            T[] bitMasks = new T[numColumns];
+            TRow[] bitMasks = new TRow[numColumns];
             for (var i = 0; i < numColumns; i++)
             {
-                bitMasks[i] = T.Zero;
-                bitMasks[i] |= T.One << i;
+                bitMasks[i] = TRow.Zero;
+                bitMasks[i] |= TRow.One << i;
             }
             using (var outp = new StreamWriter("nonogram.out"))
             {
@@ -589,7 +594,7 @@ public class NonoGramSolver
                         var chars = new char[numColumns];
                         for (var x = 0; x < numColumns; x++)
                         {
-                            chars[x] = (solutions[solution][row] & bitMasks[x]) != T.Zero ? '#' : '.';
+                            chars[x] = (solutions[solution][row] & bitMasks[x]) != TRow.Zero ? '#' : '.';
 
                         }
 
