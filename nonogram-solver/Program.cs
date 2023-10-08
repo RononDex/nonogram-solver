@@ -15,6 +15,7 @@ public class NonoGramSolver
     public static void Main()
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
         // Parsing
         ParseInput();
 
@@ -128,17 +129,47 @@ public class NonoGramSolver
         where TRow : IBinaryInteger<TRow>
         where TColumn : IBinaryInteger<TColumn>
     {
+        // Number of rows in the nonogram
         public ushort numRows;
+
+        // Number of columns in the nonogram
         public ushort numColumns;
+
+        // A list of blocks per row (key = row-index, value = array of block lengths in the given row)
         public Dictionary<int, ushort[]> rowBlocks;
+
+        // A list of blocks per column (key = column-index, value = array of block lengths in the given column)
         public Dictionary<int, ushort[]> columnBlocks;
+
+        // A list of all valid row combinations (bianry, 1=field is black) per row
         public Dictionary<int, HashSet<TRow>> validRowCombinations;
+
+        // A list of all valid column combinations (bianry, 1=field is black) per column
         public Dictionary<int, HashSet<TColumn>> validColumnCombinations;
+
+        // A list of all valid row combinations (bianry, 1=field is black) per row
+        // Copy of the Dictionary / Hashset used for solving since array is the faster data
+        // structure for this case
         public TColumn[][] validColumnCombinationsFinal;
+
+        // A list of all valid column combinations (bianry, 1=field is black) per column
+        // Copy of the Dictionary / Hashset used for solving since array is the faster data
+        // structure for this case
         public TRow[][] validRowCombinationsFinal;
+
+        // A list of all found solutions, key = solutions-nr, value = solution by rows (1 = field is set)
         public Dictionary<int, List<TRow>> solutions;
 
+        // Binary mask used to mark the length of the row in the binary data type
+        // If numColumns is 14 for example, and TRow is ushort, than only the first 14 bits
+        // for each row are relevant for the calculations, hence any row can be logically combined
+        // using the binary and operator to only look at the relevant bits in the binary datatype
         public TRow rowBitMask;
+
+        // Binary mask used to mark the length of the column in the binary data type
+        // If numRows is 25 for example, and TColumn is uint, than only the first 25 bits
+        // for each column are relevant for the calculations, hence any column can be logically combined
+        // using the binary and operator to only look at the relevant bits in the binary datatype
         public TColumn columnBitMask;
 
         public GenericNonoGramSolver(ushort numRows, ushort numColumn, Dictionary<int, ushort[]> rowBlocks, Dictionary<int, ushort[]> columnBlocks)
@@ -169,7 +200,6 @@ public class NonoGramSolver
         /// Entry point to tell the solver to start solving the NonoGram
         /// Does PreProcessing, Backtracking and Output of the solutions to nonogram.out
         /// </summary>
-
         public void FindSolutions()
         {
             // PreProcessing
@@ -239,6 +269,9 @@ public class NonoGramSolver
             SyncKnownFields(knownOnesX, knownZerosX, knownZerosY, knownOnesY, ref smallerDimensionIndex);
 
             int removedEntities = 0;
+            // Remove all rows and columns in conflict with known ones and known zeros
+            // HashSet.RemoveWhere is very fast for this purpose, since it is not a "normal"
+            // LINQ implementaiton, but comes direction from IHashSet and is highly optmized
             for (ushort x = 0; x < numXAxis; x++)
             {
                 removedEntities += validRowCombinations[x].RemoveWhere(e => (~e & knownOnesX[x]) != TRow.Zero);
