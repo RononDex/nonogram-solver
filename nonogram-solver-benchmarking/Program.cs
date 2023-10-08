@@ -12,7 +12,7 @@ namespace nonogram_solver_benchmarking
         public static void Main(string[] args)
         {
             var config = new ManualConfig()
-                .WithOptions(ConfigOptions.DisableOptimizationsValidator)
+                /* .WithOptions(ConfigOptions.DisableOptimizationsValidator) */
                 .AddValidator(JitOptimizationsValidator.DontFailOnError)
                 .AddLogger(ConsoleLogger.Default)
                 .AddColumnProvider(DefaultColumnProviders.Instance);

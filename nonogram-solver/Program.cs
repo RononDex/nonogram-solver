@@ -15,65 +15,66 @@ public class NonoGramSolver
     public static void Main()
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-        checked
-        {
-            // Parsing
-            ParseInput();
+        // Parsing
+        ParseInput();
 
-            if (numColumns <= 8)
-            {
-                if (numRows <= 8) SolveNonoGram<byte, byte>();
-                else if (numRows <= 16) SolveNonoGram<byte, ushort>();
-                else if (numRows <= 32) SolveNonoGram<byte, uint>();
-                else if (numRows <= 64) SolveNonoGram<byte, ulong>();
-                else if (numRows <= 128) SolveNonoGram<byte, UInt128>();
-                else SolveNonoGram<byte, BigInteger>();
-            }
-            if (numColumns <= 16)
-            {
-                if (numRows <= 8) SolveNonoGram<ushort, byte>();
-                else if (numRows <= 16) SolveNonoGram<ushort, ushort>();
-                else if (numRows <= 32) SolveNonoGram<ushort, uint>();
-                else if (numRows <= 64) SolveNonoGram<ushort, ulong>();
-                else if (numRows <= 128) SolveNonoGram<ushort, UInt128>();
-                else SolveNonoGram<ushort, BigInteger>();
-            }
-            else if (numColumns <= 32)
-            {
-                if (numRows <= 8) SolveNonoGram<uint, byte>();
-                else if (numRows <= 16) SolveNonoGram<uint, ushort>();
-                else if (numRows <= 32) SolveNonoGram<uint, uint>();
-                else if (numRows <= 64) SolveNonoGram<uint, ulong>();
-                else if (numRows <= 128) SolveNonoGram<uint, UInt128>();
-                else SolveNonoGram<uint, BigInteger>();
-            }
-            else if (numColumns <= 64)
-            {
-                if (numRows <= 8) SolveNonoGram<ulong, byte>();
-                else if (numRows <= 16) SolveNonoGram<ulong, ushort>();
-                else if (numRows <= 32) SolveNonoGram<ulong, uint>();
-                else if (numRows <= 64) SolveNonoGram<ulong, ulong>();
-                else if (numRows <= 128) SolveNonoGram<ulong, UInt128>();
-                else SolveNonoGram<ulong, BigInteger>();
-            }
-            else if (numColumns <= 128)
-            {
-                if (numRows <= 8) SolveNonoGram<UInt128, byte>();
-                else if (numRows <= 16) SolveNonoGram<UInt128, ushort>();
-                else if (numRows <= 32) SolveNonoGram<UInt128, uint>();
-                else if (numRows <= 64) SolveNonoGram<UInt128, ulong>();
-                else if (numRows <= 128) SolveNonoGram<UInt128, UInt128>();
-                else SolveNonoGram<UInt128, BigInteger>();
-            }
-            else
-            {
-                if (numRows <= 8) SolveNonoGram<BigInteger, byte>();
-                else if (numRows <= 16) SolveNonoGram<BigInteger, ushort>();
-                else if (numRows <= 32) SolveNonoGram<BigInteger, uint>();
-                else if (numRows <= 64) SolveNonoGram<BigInteger, ulong>();
-                else if (numRows <= 128) SolveNonoGram<BigInteger, UInt128>();
-                else SolveNonoGram<BigInteger, BigInteger>();
-            }
+        // Use generic math to choose the best fitting datatype that can represent
+        // the needed amount of bits.
+        // Choosing the smallest possible datatype speeds up the processing by a lot
+        // This algorithm supports a different datatype for columns and for rows.
+        if (numColumns <= 8)
+        {
+            if (numRows <= 8) SolveNonoGram<byte, byte>();
+            else if (numRows <= 16) SolveNonoGram<byte, ushort>();
+            else if (numRows <= 32) SolveNonoGram<byte, uint>();
+            else if (numRows <= 64) SolveNonoGram<byte, ulong>();
+            else if (numRows <= 128) SolveNonoGram<byte, UInt128>();
+            else SolveNonoGram<byte, BigInteger>();
+        }
+        if (numColumns <= 16)
+        {
+            if (numRows <= 8) SolveNonoGram<ushort, byte>();
+            else if (numRows <= 16) SolveNonoGram<ushort, ushort>();
+            else if (numRows <= 32) SolveNonoGram<ushort, uint>();
+            else if (numRows <= 64) SolveNonoGram<ushort, ulong>();
+            else if (numRows <= 128) SolveNonoGram<ushort, UInt128>();
+            else SolveNonoGram<ushort, BigInteger>();
+        }
+        else if (numColumns <= 32)
+        {
+            if (numRows <= 8) SolveNonoGram<uint, byte>();
+            else if (numRows <= 16) SolveNonoGram<uint, ushort>();
+            else if (numRows <= 32) SolveNonoGram<uint, uint>();
+            else if (numRows <= 64) SolveNonoGram<uint, ulong>();
+            else if (numRows <= 128) SolveNonoGram<uint, UInt128>();
+            else SolveNonoGram<uint, BigInteger>();
+        }
+        else if (numColumns <= 64)
+        {
+            if (numRows <= 8) SolveNonoGram<ulong, byte>();
+            else if (numRows <= 16) SolveNonoGram<ulong, ushort>();
+            else if (numRows <= 32) SolveNonoGram<ulong, uint>();
+            else if (numRows <= 64) SolveNonoGram<ulong, ulong>();
+            else if (numRows <= 128) SolveNonoGram<ulong, UInt128>();
+            else SolveNonoGram<ulong, BigInteger>();
+        }
+        else if (numColumns <= 128)
+        {
+            if (numRows <= 8) SolveNonoGram<UInt128, byte>();
+            else if (numRows <= 16) SolveNonoGram<UInt128, ushort>();
+            else if (numRows <= 32) SolveNonoGram<UInt128, uint>();
+            else if (numRows <= 64) SolveNonoGram<UInt128, ulong>();
+            else if (numRows <= 128) SolveNonoGram<UInt128, UInt128>();
+            else SolveNonoGram<UInt128, BigInteger>();
+        }
+        else
+        {
+            if (numRows <= 8) SolveNonoGram<BigInteger, byte>();
+            else if (numRows <= 16) SolveNonoGram<BigInteger, ushort>();
+            else if (numRows <= 32) SolveNonoGram<BigInteger, uint>();
+            else if (numRows <= 64) SolveNonoGram<BigInteger, ulong>();
+            else if (numRows <= 128) SolveNonoGram<BigInteger, UInt128>();
+            else SolveNonoGram<BigInteger, BigInteger>();
         }
     }
 
@@ -163,6 +164,12 @@ public class NonoGramSolver
             }
         }
 
+
+        /// <summary>
+        /// Entry point to tell the solver to start solving the NonoGram
+        /// Does PreProcessing, Backtracking and Output of the solutions to nonogram.out
+        /// </summary>
+
         public void FindSolutions()
         {
             // PreProcessing
@@ -181,15 +188,19 @@ public class NonoGramSolver
             }
 
             // Solving
-            FindSolutionsEntryPoint();
+            BacktrackingEntryPoint();
 #if DEBUG
             Console.WriteLine($"Found {solutions.Count} solutions");
 #endif
             OutputSolutions();
         }
 
-
-
+        /// <summary>
+        /// By searching for fields in rows that are always set, and the same for columns, we can figure out which possible row / column combinations are in conflict
+        /// and can be removed.
+        /// This reduces the size of the solution space drastically and can be repeated iteravily, since after removing some conflicting possibilities, we get new
+        /// "known" fields in the rows and columns with known ones or zeros
+        /// </summary>
         public int FilterImpossibleCombinations(int numXAxis, Dictionary<int, HashSet<TRow>> validXCombinations, int numYAxis, Dictionary<int, HashSet<TColumn>> validYCombinations)
         {
             var knownOnesX = new TRow[numXAxis];
@@ -242,7 +253,11 @@ public class NonoGramSolver
             return removedEntities;
         }
 
-        public void FindSolutionsEntryPoint()
+        /// <summary>
+        /// Entry point to start the recusrive backtracking
+        /// Copies the HashSets to an array which is a much faster data structure for the backtracking algorithm
+        /// </summary>
+        public void BacktrackingEntryPoint()
         {
             // Store valid column and row combinations in arrays now, making iterating over them much much faster
             validColumnCombinationsFinal = new TColumn[numColumns][];
@@ -261,10 +276,15 @@ public class NonoGramSolver
             var emptyBoardRows = new TRow[numRows];
             var emptyBoardColumns = new TColumn[numColumns];
             var currentColumnStartIndices = new ushort[numColumns];
-            FindSolutionRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan(), currentColumnStartIndices);
+            BacktackingRecursive(0, emptyBoardRows.AsSpan(), emptyBoardColumns.AsSpan(), currentColumnStartIndices);
         }
 
-        private void FindSolutionRecursive(int rowIndex, Span<TRow> boardRows, Span<TColumn> boardColumns, Span<ushort> currentColumnStartIndices)
+        /// <summary>
+        /// The recursive backtracking function goes through all preiovusly determined valid block positions in the current row
+        /// and verifies if the current choice is not in conflict with any column defintion. If it is a valid choice call itself again with the next row
+        /// until we find a valid solution
+        /// </summary>
+        private void BacktackingRecursive(int rowIndex, Span<TRow> boardRows, Span<TColumn> boardColumns, Span<ushort> currentColumnStartIndices)
         {
             var isLastRow = rowIndex == numRows - 1;
             var knownValidZerosInRow = TRow.Zero;
@@ -281,7 +301,7 @@ public class NonoGramSolver
                 }
                 else
                 {
-                    FindSolutionRecursive(rowIndex + 1, boardRows, boardColumns, currentColumnStartIndices);
+                    BacktackingRecursive(rowIndex + 1, boardRows, boardColumns, currentColumnStartIndices);
                 }
                 return;
             }
@@ -317,10 +337,11 @@ public class NonoGramSolver
                 }
                 else if (hasValidColumns && !isLastRow)
                 {
-                    FindSolutionRecursive(rowIndex + 1, boardRows, boardColumns, copyOfCurrentColumnStartIndices);
+                    BacktackingRecursive(rowIndex + 1, boardRows, boardColumns, copyOfCurrentColumnStartIndices);
                 }
             }
         }
+
         /// <summary>
         /// Validate if the current calculated columns are still valid according to
         /// the precalculated valid column combinations
@@ -382,6 +403,9 @@ public class NonoGramSolver
             return true;
         }
 
+        /// <summary>
+        /// Ensures that the current board by columns is synced with a newly chosen row by the backtracking function
+        /// </summary>
         private void UpdateColumnBoard(Span<TColumn> boardColumns, ref TRow newlyChosenRow, ref int rowIndex)
         {
             for (ushort column = 0; column < numColumns; column++)
@@ -401,8 +425,10 @@ public class NonoGramSolver
 
         /// <summary>
         /// Pre-Calculate all valid block positions in this dimension by storing the start positions of every block
-        /// This reduces redudancy in backtracking calulations and makes finish validation easier since
-        /// we no BigIntegerer have to validate this dimension
+        /// This reduces redudancy in backtracking calulations and makes finish validation easier since it
+        /// only has to validate a subset of the possible combinations
+        /// This method can cause high memory usage, to dampen the memory spike it tries to ellimate as many
+        /// possible solutions as possible before storing them in memory
         /// </summary>
         public void FindValidCombinations()
         {
@@ -497,6 +523,9 @@ public class NonoGramSolver
             }
         }
 
+        /// <summary>
+        /// Syncs the known ones and zeros of the rows with the columns and vice versa
+        /// </summary>
         private void SyncKnownFields(
             Span<TRow> knownFieldsWithOnesByRows,
             Span<TRow> knownFieldsWithZerosByRows,
@@ -528,6 +557,9 @@ public class NonoGramSolver
             }
         }
 
+        /// <summary>
+        /// Recursive function to find possible block positions
+        /// </summary>
         private void FindValidDimensionCombinationsRecursive<T>(
                             ushort[] blocks,
                             int blockIndex,
@@ -611,6 +643,9 @@ public class NonoGramSolver
             }
         }
 
+        /// <summary>
+        /// Output all the found solutions to nonogram.out
+        /// </summary>
         private void OutputSolutions()
         {
             TRow[] bitMasks = new TRow[numColumns];
