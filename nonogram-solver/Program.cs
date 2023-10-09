@@ -94,6 +94,12 @@ public class NonoGramSolver
     {
         inputLines = File.ReadLines("nonogram.in").GetEnumerator();
         var firstLine = NextLine().Split(" ");
+
+        if (firstLine.Length != 2)
+        {
+            Console.WriteLine("Invalid input, expected 2 tokens (numColumns and numRows) on first line");
+        }
+
         numColumns = byte.Parse(firstLine[0]);
         numRows = byte.Parse(firstLine[1]);
         rowBlocks = new Dictionary<int, ushort[]>(numRows);
@@ -101,25 +107,39 @@ public class NonoGramSolver
 
         for (int row = 0; row < numRows; row++)
         {
-            var rowLine = NextLine().Split(" ");
-            rowBlocks[row] = new ushort[rowLine.Length];
-
-            for (var block = 0; block < rowLine.Length; block++)
+            try
             {
-                if (rowLine[block].Length > 0)
-                    rowBlocks[row][block] = UInt16.Parse(rowLine[block]);
+                var rowLine = NextLine().Split(" ");
+                rowBlocks[row] = new ushort[rowLine.Length];
+
+                for (var block = 0; block < rowLine.Length; block++)
+                {
+                    if (rowLine[block].Length > 0)
+                        rowBlocks[row][block] = UInt16.Parse(rowLine[block]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception while reading input file, is the input file in correct format?");
             }
         }
 
         for (int column = 0; column < numColumns; column++)
         {
-            var columnLine = NextLine().Split(" ");
-            columnBlocks[column] = new ushort[columnLine.Length];
-
-            for (var block = 0; block < columnLine.Length; block++)
+            try
             {
-                if (columnLine[block].Length > 0)
-                    columnBlocks[column][block] = UInt16.Parse(columnLine[block]);
+                var columnLine = NextLine().Split(" ");
+                columnBlocks[column] = new ushort[columnLine.Length];
+
+                for (var block = 0; block < columnLine.Length; block++)
+                {
+                    if (columnLine[block].Length > 0)
+                        columnBlocks[column][block] = UInt16.Parse(columnLine[block]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception while reading input file, is the input file in correct format?");
             }
         }
     }
@@ -245,8 +265,6 @@ public class NonoGramSolver
                     knownOnesX[i] &= validCombination;
                     knownZerosX[i] &= ~validCombination;
                 }
-
-                knownZerosX[i] &= rowBitMask;
             }
             var knownOnesY = new TColumn[numYAxis];
             var knownZerosY = new TColumn[numYAxis];
@@ -260,7 +278,6 @@ public class NonoGramSolver
                     knownOnesY[i] &= validCombination;
                     knownZerosY[i] &= ~validCombination;
                 }
-                knownZerosY[i] &= columnBitMask;
             }
 
             int smallerDimensionIndex = numYAxis < numXAxis ? numYAxis : numXAxis;
