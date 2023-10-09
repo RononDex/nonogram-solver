@@ -98,6 +98,7 @@ public class NonoGramSolver
         if (firstLine.Length != 2)
         {
             Console.WriteLine("Invalid input, expected 2 tokens (numColumns and numRows) on first line");
+            System.Environment.Exit(-1);
         }
 
         numColumns = byte.Parse(firstLine[0]);
@@ -121,6 +122,7 @@ public class NonoGramSolver
             catch (Exception ex)
             {
                 Console.WriteLine("Exception while reading input file, is the input file in correct format?");
+                System.Environment.Exit(-1);
             }
         }
 
@@ -140,6 +142,7 @@ public class NonoGramSolver
             catch (Exception ex)
             {
                 Console.WriteLine("Exception while reading input file, is the input file in correct format?");
+                System.Environment.Exit(-1);
             }
         }
     }
